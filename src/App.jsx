@@ -5,7 +5,9 @@ import ResponseDisplay from "./components/ResponseDisplay";
 import Modal from "./components/Modal";
 import SmsSvg from "./assets/icons/sms.svg";
 import LiveCallerWidget from "./components/LiveCallerWidget";
-import { Typography, Button, CircularProgress } from "@mui/material";
+import { Typography, Button, CircularProgress, Box, IconButton } from "@mui/material";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CloseIcon from '@mui/icons-material/Close';
 import './App.css';
 
 // Use environment variable or fallback to localhost
@@ -90,12 +92,21 @@ const App = () => {
       />
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
+          <IconButton 
+            aria-label="close"
+            className="close-icon"
+            onClick={() => setIsModalOpen(false)}
+            sx={{ position: 'absolute', top: 10, right: 10 }}
+          >
+            <CloseIcon />
+          </IconButton>
+          
           {!showChatForm && (
             <LiveCallerWidget onChatButtonClick={() => setShowChatForm(true)} />
           )}
           {showChatForm && (
-            <>
-              <Typography variant="h6" fontWeight="bold" pt={2} pl={8}>
+            <div className="chat-section">
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
                 რისი ცოდნა გსურთ?
               </Typography>
               <InputForm
@@ -107,17 +118,23 @@ const App = () => {
                 charLimit={MAX_CHARS}
               />
               <Button 
-                variant="text" 
+                variant="outlined" 
                 color="primary" 
                 onClick={resetChat}
+                startIcon={<ArrowBackIcon />}
                 sx={{ mt: 2 }}
+                size="small"
               >
                 დაბრუნება
               </Button>
-            </>
+            </div>
           )}
           {error && <p className="error">{error}</p>}
-          {loading && <CircularProgress size={24} sx={{ mt: 2 }} />}
+          {loading && 
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+          }
           <ResponseDisplay response={response} chatHistory={chatHistory} />
         </Modal>
       )}

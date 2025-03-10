@@ -1,45 +1,39 @@
-import React, { useRef, useEffect } from "react";
-import RemoveIcon from '@mui/icons-material/Remove';
+import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
+import { Box, Fade } from "@mui/material";
 import "./Modal.scss";
 
 const Modal = ({ children, onClose }) => {
-  const modalRef = useRef();
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target) &&
-        !event.target.closest(".MuiSelect-root") &&
-        !event.target.closest(".MuiPaper-root") &&
-        !event.target.closest(".MuiPopover-root")
-      ) {
-        onClose();
-      }
+    // Open with animation after mounting
+    setIsOpen(true);
+
+    // Add event listener to close modal on escape key
+    const handleEscape = (e) => {
+      if (e.key === "Escape") onClose();
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [onClose]);
 
-  useEffect(() => {
-    setTimeout(() => {
-      modalRef.current.classList.add("show");
-    }, 10);
-  }, []);
-
   return (
-    <div className="modal-overlay show">
-      <div className="modal-content show" ref={modalRef}>
-        <button className="close-button" onClick={onClose}>
-          <RemoveIcon />
-        </button>
-        {children}
-      </div>
-    </div>
+    <Fade in={isOpen} timeout={300}>
+      <Box className="modal-container">
+        <div className="modal-content">{children}</div>
+      </Box>
+    </Fade>
   );
+};
+
+Modal.propTypes = {
+  children: PropTypes.node.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
 
 export default Modal;

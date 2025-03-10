@@ -1,106 +1,60 @@
 @use "/src/styles/variables" as *;
 
-.modal-overlay {
+// Clean up and simplify the modal styles
+.modal-container {
   position: fixed;
-  right: 90px;
-  width: 90%;
-  max-width: 390px;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  top: 50%;
+  right: 30px;
+  transform: translateY(-50%);
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  width: 35%;
+  max-width: 450px;
+  height: auto;
+  max-height: 80vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: all 0.3s ease-in-out;
   z-index: 1000;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-}
-
-.modal-overlay.show {
-  opacity: 1;
-}
-
-.modal-content {
-  height: 100%;
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  width: 100%;
-  max-width: 500px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  position: relative;
-  transform: translateY(50px);
-  transition: transform 0.3s ease-in-out;
-}
-
-.modal-content.show {
-  transform: translateY(0);
-}
-
-.close-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-.error {
-  color: red;
-  margin-top: 10px;
-}
-
-.input-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.input-container input {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-}
-
-.input-container button {
-  padding: 10px;
-  background-color: #1e2a4a;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.input-container button:hover {
-  background-color: #16203a;
-}
-
-.search-results {
-  margin-top: 20px;
-}
-
-.answer {
-  font-weight: bold;
-}
-
-@media (max-width: 600px) {
-  .modal-overlay {
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  
+  // Responsive adjustments
+  @media (max-width: $breakpoint-md) {
+    width: 50%;
+    right: 20px;
+  }
+  
+  @media (max-width: $breakpoint-sm) {
+    width: 85%;
+    right: 10px;
+    max-height: 85vh;
+    border-radius: 12px;
   }
 
   .modal-content {
-    width: 90%;
-    max-width: none;
-    height: auto;
-    transform: translateY(100px);
+    padding: $spacing-md;
+    position: relative;  /* For positioning the close button */
+    
+    @media (max-width: $breakpoint-sm) {
+      padding: $spacing-sm;
+    }
   }
+}
 
-  .modal-content.show {
-    transform: translateY(0);
+// Remove all the legacy classes
+.modal-overlay, .close-button, .modal-header, .modal-backdrop, .modal-title {
+  display: none;
+}
+
+// Keep only the necessary animations
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
   }
 }

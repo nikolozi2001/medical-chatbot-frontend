@@ -1,0 +1,53 @@
+/* ...existing code... */
+
+.sms_svg {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px; /* Reduced from 60px */
+  height: 50px; /* Reduced from 60px */
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.sms_svg:hover {
+  transform: scale(1.1);
+}
+
+.chat-section {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-x: hidden;
+  padding-top: 15px; /* Add some padding at the top now that title is gone */
+}
+
+.error {
+  color: #d32f2f;
+  margin: 8px 0;
+  padding: 6px;
+  border-radius: 4px;
+  background-color: rgba(211, 47, 47, 0.1);
+  font-size: 14px;
+}
+
+.close-icon {
+  position: absolute;
+  top: 10px !important;
+  right: 10px !important;
+  z-index: 10;
+}
+
+.close-icon:hover {
+  color: #d32f2f;
+}
+
+/* Ensure app content doesn't overflow */
+.app {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* ...existing code... */

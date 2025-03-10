@@ -1,0 +1,48 @@
+@use "/src/styles/variables" as *;
+@use "sass:color";
+
+.live-caller-widget {
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-md 0;
+  max-width: 100%;
+  
+  .MuiButton-root {
+    padding: $spacing-md;
+    border-radius: 8px;
+    transition: transform 0.2s ease-in-out;
+    
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+    
+    &.MuiButton-containedPrimary {
+      background-color: $primary-color;
+      box-shadow: 0 4px 6px rgba(25, 118, 210, 0.2);
+      
+      &:hover {
+        background-color: color.adjust($primary-color, $lightness: -5%);
+      }
+    }
+    
+    &.MuiButton-outlinedPrimary {
+      border: 2px solid $primary-color;
+      
+      &:hover:not(:disabled) {
+        background-color: rgba(25, 118, 210, 0.04);
+      }
+      
+      &:disabled {
+        border-color: rgba(0, 0, 0, 0.26);
+      }
+    }
+  }
+  
+  .MuiDivider-root {
+    margin: $spacing-md 0;
+    
+    .MuiTypography-caption {
+      padding: 0 $spacing-md;
+    }
+  }
+}

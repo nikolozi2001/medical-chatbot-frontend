@@ -50,4 +50,51 @@
   overflow-x: hidden;
 }
 
+/* Connection status indicator */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: absolute;
+  top: 14px;
+  left: 15px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.online {
+  background-color: #4caf50;
+}
+
+.status-dot.offline {
+  background-color: #f44336;
+}
+
+/* File attachment display */
+.file-attachment {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.file-icon {
+  margin-right: 8px;
+}
+
+.file-name {
+  flex-grow: 1;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ...existing code... */

@@ -1,0 +1,21 @@
+@use "/src/styles/variables" as *;
+
+.chat-history-container {
+  padding: $spacing-md 0;
+  
+  .chat-history-list {
+    max-height: 60vh;
+    overflow-y: auto;
+    margin-top: $spacing-md;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.02);
+    
+    .chat-history-item {
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: rgba(25, 118, 210, 0.08);
+      }
+    }
+  }
+}

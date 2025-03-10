@@ -1,0 +1,9 @@
+@use "/src/styles/variables" as *;
+
+.file-upload-btn {
+  transition: all 0.2s;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+}

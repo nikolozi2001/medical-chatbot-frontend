@@ -1,332 +1,262 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Typography, 
+  List, 
+  ListItem, 
+  ListItemButton, 
+  ListItemText, 
+  Divider, 
   TextField, 
   Button, 
   Paper, 
-  List, 
-  ListItem, 
-  ListItemText,
-  Divider, 
+  AppBar, 
+  Toolbar, 
+  IconButton,
   Badge,
-  Avatar,
-  Grid,
-  AppBar,
-  Toolbar,
-  Container
+  Container,
+  Card,
+  CardContent
 } from '@mui/material';
-import io from 'socket.io-client';
-import OperatorChat from '../components/OperatorChat';
-import '../styles/OperatorPanel.scss';
-
-// Use environment variable or fallback
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8000';
+import SendIcon from '@mui/icons-material/Send';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import PersonIcon from '@mui/icons-material/Person';
+import { useNavigate } from 'react-router-dom';
+import { useLiveChat } from '../context/LiveChatContext';
+import './OperatorPanel.scss';
 
 const OperatorPanel = () => {
-  const [socket, setSocket] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [operatorName, setOperatorName] = useState('');
+  const navigate = useNavigate();
+  const { 
+    isConnected, 
+    clients, 
+    currentClient, 
+    chats,
+    enableOperatorMode,
+    disableOperatorMode, 
+    acceptClient, 
+    sendMessage, 
+    setCurrentClient 
+  } = useLiveChat();
+  
+  const [message, setMessage] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [pendingChats, setPendingChats] = useState([]);
-  const [activeChats, setActiveChats] = useState([]);
-  const [selectedChat, setSelectedChat] = useState(null);
-  const [loginError, setLoginError] = useState('');
-  
-  // Connect to socket when component mounts
-  useEffect(() => {
-    const newSocket = io(SOCKET_URL, {
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      autoConnect: false,
-    });
-    
-    setSocket(newSocket);
-    
-    return () => {
-      if (newSocket) newSocket.disconnect();
-    };
-  }, []);
-  
-  // Set up event listeners after login
-  useEffect(() => {
-    if (socket && isLoggedIn) {
-      socket.connect();
-      
-      socket.on('connect', () => {
-        console.log('Operator connected to socket');
-        // Register as operator
-        socket.emit('operator_online', { name: operatorName });
-      });
-      
-      socket.on('pending_chats', (chats) => {
-        setPendingChats(chats);
-      });
-      
-      socket.on('active_chats', (chats) => {
-        setActiveChats(chats);
-      });
-      
-      socket.on('new_chat_request', (chat) => {
-        setPendingChats(prev => [...prev, chat]);
-      });
-      
-      socket.on('chat_message', (message) => {
-        setActiveChats(prev => {
-          return prev.map(chat => {
-            if (chat.id === message.chatId) {
-              return {
-                ...chat,
-                messages: [...(chat.messages || []), message]
-              };
-            }
-            return chat;
-          });
-        });
-        
-        // Update selected chat if it's the current one
-        if (selectedChat?.id === message.chatId) {
-          setSelectedChat(prev => ({
-            ...prev,
-            messages: [...(prev.messages || []), message]
-          }));
-        }
-      });
-      
-      socket.on('chat_ended', (chatId) => {
-        setActiveChats(prev => prev.filter(chat => chat.id !== chatId));
-        if (selectedChat?.id === chatId) {
-          setSelectedChat(null);
-        }
-      });
-      
-      return () => {
-        socket.off('pending_chats');
-        socket.off('active_chats');
-        socket.off('new_chat_request');
-        socket.off('chat_message');
-        socket.off('chat_ended');
-      };
-    }
-  }, [socket, isLoggedIn, operatorName, selectedChat]);
-  
+  const [error, setError] = useState('');
+
   const handleLogin = (e) => {
     e.preventDefault();
-    
-    // Simple authentication - in real app, this would be a backend call
-    if (operatorName && password === 'operator123') { // Very simple password for demo
-      setIsLoggedIn(true);
-      setLoginError('');
+    // Simple authentication for demo purposes - in production, use proper auth
+    if (password === 'operator123') {
+      setIsAuthenticated(true);
+      enableOperatorMode();
+      setError('');
     } else {
-      setLoginError('არასწორი მონაცემები');
+      setError('Invalid password');
     }
   };
-  
-  const acceptChat = (chat) => {
-    if (socket) {
-      socket.emit('accept_chat', { chatId: chat.id, operatorName });
-      setPendingChats(prev => prev.filter(c => c.id !== chat.id));
-      setActiveChats(prev => [...prev, { ...chat, operator: operatorName }]);
-    }
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!message.trim() || !currentClient) return;
+    
+    sendMessage(message, currentClient.id);
+    setMessage('');
   };
-  
-  const selectChat = (chat) => {
-    setSelectedChat(chat);
+
+  const handleClientSelect = (client) => {
+    setCurrentClient(client);
+    acceptClient(client.id);
   };
-  
-  const sendMessage = (message) => {
-    if (socket && selectedChat) {
-      const messageData = {
-        chatId: selectedChat.id,
-        sender: 'operator',
-        text: message,
-        timestamp: new Date().toISOString(),
-      };
-      
-      socket.emit('operator_message', messageData);
-      
-      // Update UI optimistically
-      setActiveChats(prev => {
-        return prev.map(chat => {
-          if (chat.id === selectedChat.id) {
-            return {
-              ...chat,
-              messages: [...(chat.messages || []), messageData]
-            };
-          }
-          return chat;
-        });
-      });
-      
-      setSelectedChat(prev => ({
-        ...prev,
-        messages: [...(prev.messages || []), messageData]
-      }));
-    }
-  };
-  
-  const endChat = () => {
-    if (socket && selectedChat) {
-      socket.emit('operator_end_chat', { chatId: selectedChat.id });
-      setActiveChats(prev => prev.filter(chat => chat.id !== selectedChat.id));
-      setSelectedChat(null);
-    }
-  };
-  
-  // Show login form if not logged in
-  if (!isLoggedIn) {
+
+  if (!isAuthenticated) {
     return (
-      <Container maxWidth="sm">
-        <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
-          <Typography variant="h5" component="h1" gutterBottom align="center">
-            ოპერატორის პანელი
-          </Typography>
-          
-          <Box component="form" onSubmit={handleLogin} sx={{ mt: 3 }}>
-            <TextField
-              fullWidth
-              label="ოპერატორის სახელი"
-              margin="normal"
-              value={operatorName}
-              onChange={(e) => setOperatorName(e.target.value)}
-              required
-            />
-            
-            <TextField
-              fullWidth
-              label="პაროლი"
-              type="password"
-              margin="normal"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              error={!!loginError}
-              helperText={loginError}
-            />
-            
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              შესვლა
-            </Button>
-          </Box>
-        </Paper>
+      <Container maxWidth="sm" sx={{ pt: 8 }}>
+        <Card>
+          <CardContent>
+            <Typography variant="h5" gutterBottom textAlign="center">
+              Operator Login
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }} textAlign="center">
+              Enter password to access operator panel
+            </Typography>
+            <Box component="form" onSubmit={handleLogin}>
+              <TextField
+                label="Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                error={!!error}
+                helperText={error || "Hint: Use 'operator123' to login"}
+                fullWidth
+                margin="normal"
+              />
+              <Button 
+                type="submit" 
+                variant="contained" 
+                fullWidth 
+                sx={{ mt: 2 }}
+              >
+                Login
+              </Button>
+              <Button
+                variant="text"
+                fullWidth
+                sx={{ mt: 1 }}
+                onClick={() => navigate('/')}
+              >
+                Back to Home
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
       </Container>
     );
   }
-  
+
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box sx={{ flexGrow: 1, height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            ოპერატორის პანელი
+            Operator Control Panel
           </Typography>
-          <Typography variant="subtitle1">
-            მოგესალმებით, {operatorName}
-          </Typography>
-          <Button 
-            color="inherit" 
-            onClick={() => setIsLoggedIn(false)}
-            sx={{ ml: 2 }}
+          <Badge 
+            color={isConnected ? "success" : "error"}
+            variant="dot"
+            overlap="circular"
           >
-            გასვლა
-          </Button>
+            <Typography variant="body2" sx={{ mr: 2 }}>
+              Status: {isConnected ? 'Online' : 'Offline'}
+            </Typography>
+          </Badge>
+          <IconButton 
+            color="inherit" 
+            onClick={() => {
+              disableOperatorMode();
+              navigate('/');
+            }}
+          >
+            <ExitToAppIcon />
+          </IconButton>
         </Toolbar>
       </AppBar>
       
-      <Grid container sx={{ height: 'calc(100vh - 64px)' }}>
-        <Grid item xs={3} sx={{ borderRight: 1, borderColor: 'divider' }}>
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              მომლოდინე მომხმარებლები
-            </Typography>
-            
-            <List>
-              {pendingChats.length === 0 ? (
-                <ListItem>
-                  <ListItemText primary="მოლოდინში არავინ არის" />
-                </ListItem>
-              ) : (
-                pendingChats.map((chat) => (
-                  <ListItem key={chat.id} sx={{ mb: 1 }}>
-                    <Paper elevation={2} sx={{ p: 2, width: '100%' }}>
-                      <Typography variant="subtitle1">
-                        {chat.user?.name || 'მომხმარებელი'}
-                      </Typography>
-                      <Button 
-                        variant="contained" 
-                        size="small"
-                        onClick={() => acceptChat(chat)}
-                        sx={{ mt: 1 }}
-                      >
-                        მიღება
-                      </Button>
-                    </Paper>
-                  </ListItem>
-                ))
-              )}
-            </List>
-            
-            <Divider sx={{ my: 2 }} />
-            
-            <Typography variant="h6" gutterBottom>
-              აქტიური საუბრები
-            </Typography>
-            
-            <List>
-              {activeChats.length === 0 ? (
-                <ListItem>
-                  <ListItemText primary="აქტიური საუბარი არ არის" />
-                </ListItem>
-              ) : (
-                activeChats.map((chat) => (
-                  <ListItem 
-                    key={chat.id}
-                    button
-                    selected={selectedChat?.id === chat.id}
-                    onClick={() => selectChat(chat)}
-                    sx={{ 
-                      mb: 1,
-                      bgcolor: selectedChat?.id === chat.id ? 'action.selected' : 'transparent',
-                      borderRadius: 1
-                    }}
-                  >
-                    <ListItemText 
-                      primary={chat.user?.name || 'მომხმარებელი'} 
-                      secondary={`დაიწყო: ${new Date(chat.startTime).toLocaleTimeString()}`} 
-                    />
-                  </ListItem>
-                ))
-              )}
-            </List>
-          </Box>
-        </Grid>
-        
-        <Grid item xs={9}>
-          {selectedChat ? (
-            <OperatorChat 
-              chat={selectedChat}
-              onSendMessage={sendMessage}
-              onEndChat={endChat}
-            />
+      <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
+        {/* Clients List */}
+        <Paper sx={{ width: 240, overflow: 'auto', borderRadius: 0 }}>
+          <Typography variant="h6" sx={{ p: 2 }}>
+            Active Clients
+          </Typography>
+          <Divider />
+          {clients.length === 0 ? (
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                No active clients
+              </Typography>
+            </Box>
           ) : (
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center', 
-              height: '100%' 
-            }}>
-              <Typography variant="h6" color="text.secondary">
-                აირჩიეთ საუბარი მარცხენა პანელიდან
+            <List>
+              {clients.map((client) => (
+                <ListItem key={client.id} disablePadding>
+                  <ListItemButton
+                    selected={currentClient?.id === client.id}
+                    onClick={() => handleClientSelect(client)}
+                  >
+                    <PersonIcon sx={{ mr: 1, color: client.hasOperator ? 'primary.main' : 'text.secondary' }} />
+                    <ListItemText 
+                      primary={`Client ${client.id.substring(0, 8)}...`}
+                      secondary={client.hasOperator ? 'Assigned' : 'Waiting'}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </Paper>
+        
+        {/* Chat Area */}
+        <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
+          {currentClient ? (
+            <>
+              <Typography variant="h6" gutterBottom>
+                Chat with Client {currentClient.id.substring(0, 8)}...
+              </Typography>
+              
+              <Box sx={{ 
+                flexGrow: 1, 
+                bgcolor: '#f5f5f5', 
+                borderRadius: 1, 
+                p: 2, 
+                mb: 2, 
+                overflow: 'auto',
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+                {chats[currentClient.id]?.length ? (
+                  chats[currentClient.id].map((chat) => (
+                    <Box 
+                      key={chat.id}
+                      sx={{ 
+                        alignSelf: chat.fromClient ? 'flex-start' : 'flex-end',
+                        bgcolor: chat.fromClient ? '#e0e0e0' : '#1976d2',
+                        color: chat.fromClient ? 'text.primary' : 'white',
+                        borderRadius: 2,
+                        py: 1,
+                        px: 2,
+                        mb: 1,
+                        maxWidth: '70%'
+                      }}
+                    >
+                      <Typography variant="body2">{chat.text}</Typography>
+                      <Typography variant="caption" sx={{ 
+                        display: 'block', 
+                        textAlign: 'right',
+                        opacity: 0.7,
+                        fontSize: '0.7rem'
+                      }}>
+                        {new Date(chat.timestamp).toLocaleTimeString()}
+                      </Typography>
+                    </Box>
+                  ))
+                ) : (
+                  <Box sx={{ textAlign: 'center', mt: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No messages yet
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+              
+              <Box component="form" onSubmit={handleSendMessage} sx={{ display: 'flex' }}>
+                <TextField
+                  fullWidth
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  variant="outlined"
+                  size="small"
+                />
+                <Button 
+                  type="submit"
+                  variant="contained"
+                  sx={{ ml: 1 }}
+                  disabled={!message.trim()}
+                  endIcon={<SendIcon />}
+                >
+                  Send
+                </Button>
+              </Box>
+            </>
+          ) : (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+              <Typography variant="body1" color="text.secondary">
+                Select a client to start chatting
               </Typography>
             </Box>
           )}
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 };

@@ -232,6 +232,29 @@ const AppContent = () => {
         />
       </Badge>
       
+      {/* Add Operator Login Link */}
+      <Box 
+        sx={{ 
+          position: 'fixed', 
+          bottom: '10px', 
+          left: '10px',
+          opacity: 0.7,
+          '&:hover': {
+            opacity: 1
+          }
+        }}
+      >
+        <Link to="/operator" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Button 
+            size="small" 
+            variant="text" 
+            sx={{ fontSize: '0.7rem' }}
+          >
+            Operator Login
+          </Button>
+        </Link>
+      </Box>
+      
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
           <Box sx={{ position: 'relative', height: '100%' }}>

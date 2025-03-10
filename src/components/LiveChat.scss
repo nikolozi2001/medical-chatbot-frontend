@@ -4,6 +4,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  max-height: 600px;
   padding: $spacing-md 0;
   
   &.waiting {
@@ -60,4 +61,109 @@
       opacity: 0.7;
     }
   }
+}
+
+.live-chat-header {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm $spacing-md;
+  position: relative;
+  
+  h6 {
+    margin-left: $spacing-md;
+  }
+  
+  .connection-status {
+    position: absolute;
+    right: $spacing-md;
+    font-size: $font-size-small;
+    padding: 2px 8px;
+    border-radius: 12px;
+    
+    &.connected {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: #4caf50;
+    }
+    
+    &.disconnected {
+      background-color: rgba(244, 67, 54, 0.1);
+      color: #f44336;
+    }
+  }
+}
+
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  
+  .message {
+    display: flex;
+    align-items: flex-end;
+    max-width: 80%;
+    
+    &.self {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+      
+      .message-bubble {
+        background-color: $user-message-bg;
+        border-radius: 16px 16px 0 16px;
+      }
+    }
+    
+    &.other {
+      align-self: flex-start;
+      
+      .message-bubble {
+        background-color: $bot-message-bg;
+        border-radius: 16px 16px 16px 0;
+      }
+    }
+    
+    &.system {
+      align-self: center;
+      
+      .message-bubble {
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 16px;
+        padding: $spacing-xs $spacing-md;
+        
+        p {
+          color: rgba(0, 0, 0, 0.6);
+          font-style: italic;
+          font-size: $font-size-small;
+        }
+      }
+    }
+    
+    .message-avatar {
+      width: 32px;
+      height: 32px;
+      margin-right: $spacing-xs;
+      background-color: $primary-color;
+      font-size: $font-size-small;
+    }
+    
+    .message-bubble {
+      padding: $spacing-sm $spacing-md;
+      position: relative;
+      
+      .message-time {
+        display: block;
+        text-align: right;
+        font-size: 10px;
+        color: rgba(0, 0, 0, 0.5);
+        margin-top: 2px;
+      }
+    }
+  }
+}
+
+.message-input-container {
+  padding: $spacing-sm;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }

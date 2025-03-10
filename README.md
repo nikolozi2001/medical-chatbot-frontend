@@ -31,19 +31,36 @@ This project is the frontend for a medical chatbot application. It allows users 
 
 ## Running the Application
 
-1. Start the backend server:
+### Important: Start Backend First
+For the live chat functionality to work, make sure to start the backend server first:
 
-   ```bash
-   npm run start:backend
-   ```
+```bash
+# Run the backend server
+npm run start:backend
+```
 
-2. Start the frontend application:
+### Then Start Frontend
+After the backend is running, start the frontend in a new terminal:
 
-   ```bash
-   npm run dev
-   ```
+```bash
+npm run dev
+```
 
-3. Open your browser and navigate to `http://localhost:3000` to use the application.
+3. Open your browser and navigate to `http://localhost:5173` to use the application.
+
+## Troubleshooting
+
+### Connection Errors
+If you see Socket.IO connection errors:
+1. Make sure the backend server is running with `npm run start:backend`
+2. Check that port 8000 is not in use by another application
+3. Ensure your firewall is not blocking the connection
+
+### Live Chat Not Working
+The live chat feature requires the backend server to be running. If the chat isn't connecting:
+1. Run the backend with `npm run start:all`
+2. Check the console for error messages
+3. Try refreshing the page after the backend is running
 
 ## Environment Variables
 
@@ -51,6 +68,7 @@ Create a `.env` file in the root directory and add the following environment var
 
 ```
 GOOGLE_GEN_AI_KEY=your-google-generative-ai-key
+VITE_API_URL=http://localhost:8000
 ```
 
 ## Usage

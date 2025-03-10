@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Box, Typography, Button, Divider } from "@mui/material";
+import { Box, Typography, Button, Divider, Alert } from "@mui/material";
 import ChatIcon from '@mui/icons-material/Chat';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import "./LiveCallerWidget.scss";
@@ -45,9 +45,11 @@ const LiveCallerWidget = ({ onChatButtonClick, onLiveChatClick, isOnline }) => {
         </Button>
         
         {!isOnline && (
-          <Typography variant="caption" color="error" sx={{ textAlign: 'center' }}>
-            ოპერატორი ამჟამად მიუწვდომელია. სცადეთ მოგვიანებით.
-          </Typography>
+          <Alert severity="info" sx={{ mt: 2 }}>
+            <Typography variant="caption">
+              ოპერატორი ამჟამად მიუწვდომელია. გაუშვით ბექენდი ბრძანებით "npm run start:backend"
+            </Typography>
+          </Alert>
         )}
       </Box>
     </Box>

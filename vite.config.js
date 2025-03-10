@@ -6,12 +6,22 @@ import postcssNormalize from 'postcss-normalize';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      jsxRuntime: 'automatic',
+      // Configure emotion to avoid duplicates
+      jsxImportSource: '@emotion/react',
+      babel: {
+        plugins: ['@emotion/babel-plugin']
+      }
+    })
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
       '~styles': path.resolve(__dirname, './src/styles')
-    }
+    },
+    dedupe: ['react', 'react-dom', '@emotion/react', '@mui/material']
   },
   css: {
     preprocessorOptions: {
@@ -31,5 +41,14 @@ export default defineConfig({
         postcssNormalize()
       ]
     }
+  },
+  server: {
+    proxy: {
+      '/socket.io': {
+        target: 'http://localhost:8000',
+        ws: true,
+        changeOrigin: true
+      }
+    }
   }
-});
+})

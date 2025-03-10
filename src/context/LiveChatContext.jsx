@@ -1,122 +1,172 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import io from 'socket.io-client';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { io } from 'socket.io-client';
 
-// Use environment variable or fallback
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8000';
-
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const LiveChatContext = createContext();
 
 export const LiveChatProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [agentStatus, setAgentStatus] = useState('offline'); // offline, online, busy
-  const [liveChatHistory, setLiveChatHistory] = useState([]);
-  const [isWaiting, setIsWaiting] = useState(false);
-  const [activeChat, setActiveChat] = useState(null);
-  const [queuePosition, setQueuePosition] = useState(0);
+  const [operatorMode, setOperatorMode] = useState(false);
+  const [clients, setClients] = useState([]);
+  const [currentClient, setCurrentClient] = useState(null);
+  const [chats, setChats] = useState({}); // clientId -> messages[]
 
-  // Initialize socket connection
   useEffect(() => {
-    // Create socket connection
-    const newSocket = io(SOCKET_URL, {
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      autoConnect: false,
-    });
-
-    // Socket event handlers
-    newSocket.on('connect', () => {
-      console.log('Socket connected');
-      setIsConnected(true);
-    });
-
-    newSocket.on('disconnect', () => {
-      console.log('Socket disconnected');
-      setIsConnected(false);
-    });
-
-    newSocket.on('agent_status', (status) => {
-      setAgentStatus(status);
-    });
-
-    newSocket.on('chat_started', (chatData) => {
-      setActiveChat(chatData);
-      setIsWaiting(false);
-    });
-
-    newSocket.on('queue_position', (position) => {
-      setQueuePosition(position);
-    });
-
-    newSocket.on('message', (message) => {
-      setLiveChatHistory((prev) => [...prev, message]);
-    });
-
-    newSocket.on('chat_ended', () => {
-      setActiveChat(null);
-      // Keep chat history for reference
-    });
-
+    // Only create the socket when in operator mode
+    if (!operatorMode) return;
+    
+    const newSocket = io(API_URL);
     setSocket(newSocket);
-
-    // Clean up
+    
     return () => {
       if (newSocket) newSocket.disconnect();
     };
-  }, []);
+  }, [operatorMode]);
 
-  // Connect to socket when needed
-  const connectToSocket = () => {
-    if (socket && !isConnected) {
-      socket.connect();
-    }
-  };
+  useEffect(() => {
+    if (!socket) return;
 
-  // Initialize a chat request
-  const requestLiveChat = (userData) => {
-    if (!socket || !isConnected) {
-      connectToSocket();
-    }
-    
-    setIsWaiting(true);
-    setLiveChatHistory([]);
-    socket.emit('request_chat', userData);
-  };
-
-  // Send a message
-  const sendMessage = (message) => {
-    if (socket && isConnected && activeChat) {
-      const messageData = {
-        chatId: activeChat.id,
-        sender: 'user',
-        text: message,
-        timestamp: new Date().toISOString(),
-      };
+    const handleConnect = () => {
+      console.log('Operator connected to server');
+      setIsConnected(true);
       
-      socket.emit('send_message', messageData);
-      setLiveChatHistory((prev) => [...prev, messageData]);
-    }
+      // Register as operator
+      socket.emit('operator:connect', { id: `operator_${Date.now()}` });
+    };
+    
+    const handleDisconnect = () => {
+      console.log('Operator disconnected from server');
+      setIsConnected(false);
+    };
+    
+    const handleClientsList = (clientsList) => {
+      console.log('Received clients list:', clientsList);
+      setClients(clientsList);
+    };
+    
+    const handleNewClient = (client) => {
+      console.log('New client connected:', client);
+      setClients(prev => [...prev, client]);
+    };
+    
+    const handleClientLeft = (data) => {
+      console.log('Client left:', data);
+      setClients(prev => prev.filter(client => client.id !== data.id));
+      
+      if (currentClient?.id === data.id) {
+        setCurrentClient(null);
+      }
+    };
+    
+    const handleClientUpdated = (updatedClient) => {
+      console.log('Client updated:', updatedClient);
+      setClients(prev => prev.map(client => 
+        client.id === updatedClient.id ? { ...client, ...updatedClient } : client
+      ));
+    };
+    
+    const handleMessageReceived = (message) => {
+      console.log('Received message:', message);
+      const clientId = message.from;
+      
+      setChats(prev => ({
+        ...prev,
+        [clientId]: [
+          ...(prev[clientId] || []),
+          {
+            id: Date.now(),
+            text: message.text,
+            fromClient: true,
+            timestamp: message.timestamp
+          }
+        ]
+      }));
+      
+      // If this is a new client that we haven't seen before, add them to our list
+      if (!clients.find(c => c.id === clientId)) {
+        const newClient = { id: clientId, hasOperator: false };
+        setClients(prev => [...prev, newClient]);
+      }
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('clients:list', handleClientsList);
+    socket.on('client:new', handleNewClient);
+    socket.on('client:left', handleClientLeft);
+    socket.on('client:updated', handleClientUpdated);
+    socket.on('message:received', handleMessageReceived);
+    
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('clients:list', handleClientsList);
+      socket.off('client:new', handleNewClient);
+      socket.off('client:left', handleClientLeft);
+      socket.off('client:updated', handleClientUpdated);
+      socket.off('message:received', handleMessageReceived);
+    };
+  }, [socket, clients, currentClient]);
+
+  const acceptClient = (clientId) => {
+    if (!socket || !isConnected) return;
+    
+    socket.emit('operator:accept', { clientId });
+    
+    // Update local state
+    setCurrentClient({ id: clientId });
+    setClients(prev => prev.map(client => 
+      client.id === clientId ? { ...client, hasOperator: true } : client
+    ));
   };
 
-  // End the chat
-  const endChat = () => {
-    if (socket && isConnected && activeChat) {
-      socket.emit('end_chat', { chatId: activeChat.id });
-      setActiveChat(null);
-    }
+  const sendMessage = (text, clientId) => {
+    if (!socket || !isConnected || !clientId) return;
+    
+    const message = {
+      text,
+      to: clientId,
+      type: 'text'
+    };
+    
+    socket.emit('message:send', message);
+    
+    // Add to local chat
+    setChats(prev => ({
+      ...prev,
+      [clientId]: [
+        ...(prev[clientId] || []),
+        {
+          id: Date.now(),
+          text,
+          fromClient: false, // from operator
+          timestamp: new Date().toISOString()
+        }
+      ]
+    }));
+  };
+
+  const enableOperatorMode = () => setOperatorMode(true);
+  const disableOperatorMode = () => {
+    setOperatorMode(false);
+    setCurrentClient(null);
+    setClients([]);
+    setChats({});
   };
 
   const value = {
     isConnected,
-    agentStatus,
-    liveChatHistory,
-    isWaiting,
-    activeChat,
-    queuePosition,
-    requestLiveChat,
+    operatorMode,
+    clients,
+    currentClient,
+    chats,
+    enableOperatorMode,
+    disableOperatorMode,
+    acceptClient,
     sendMessage,
-    endChat,
+    setCurrentClient
   };
 
   return (
@@ -127,9 +177,8 @@ export const LiveChatProvider = ({ children }) => {
 };
 
 LiveChatProvider.propTypes = {
-  children: PropTypes.node.isRequired,
+  children: PropTypes.node.isRequired
 };
 
 export const useLiveChat = () => useContext(LiveChatContext);
-
 export default LiveChatContext;

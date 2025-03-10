@@ -1,0 +1,40 @@
+@use "/src/styles/variables" as *;
+
+.operator-chat-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-md;
+}
+
+.operator-message-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-bottom: $spacing-md;
+  padding: $spacing-md;
+  background-color: $secondary-color;
+  border-radius: $spacing-xs;
+}
+
+.operator-message {
+  margin-bottom: $spacing-sm;
+  padding: $spacing-xs $spacing-md;
+  border-radius: $spacing-sm;
+  max-width: 70%;
+  
+  &.operator {
+    align-self: flex-end;
+    background-color: $primary-color;
+    color: white;
+  }
+  
+  &.client {
+    align-self: flex-start;
+    background-color: lighten($secondary-color, 5%);
+  }
+}
+
+.message-input {
+  display: flex;
+  gap: $spacing-sm;
+}

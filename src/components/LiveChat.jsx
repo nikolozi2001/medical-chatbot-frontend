@@ -1,220 +1,360 @@
-import React, { useState, useRef, useEffect } from 'react';
-import PropTypes from 'prop-types'; // Add this import
-import { 
-  Box, 
-  TextField, 
-  Button, 
-  Typography, 
-  Paper, 
-  Avatar, 
-  CircularProgress,
-  IconButton,
-  Divider
-} from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Typography, TextField, Button, CircularProgress, IconButton, Divider, Avatar, Alert } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import CallEndIcon from '@mui/icons-material/CallEnd';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useLiveChat } from '../context/LiveChatContext';
+import { io } from 'socket.io-client';
+import PropTypes from 'prop-types';
 import './LiveChat.scss';
 
-const LiveChat = ({ onBack }) => {
-  const [message, setMessage] = useState('');
-  const [name, setName] = useState('');
-  const [hasRequestedChat, setHasRequestedChat] = useState(false);
-  const messagesEndRef = useRef(null);
-  
-  const { 
-    isConnected, 
-    agentStatus, 
-    liveChatHistory, 
-    isWaiting, 
-    activeChat, 
-    queuePosition,
-    requestLiveChat, 
-    sendMessage, 
-    endChat 
-  } = useLiveChat();
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-  // Scroll to bottom when messages change
+// Helper function to generate unique IDs
+const generateUniqueId = (() => {
+  let counter = 0;
+  return () => `msg_${Date.now()}_${counter++}`;
+})();
+
+const LiveChat = ({ onBack }) => {
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(true);
+  const [connectionError, setConnectionError] = useState(false);
+  const [operatorId, setOperatorId] = useState(null);
+  const [clientId] = useState(`client_${Date.now()}`);
+  const messagesEndRef = useRef(null);
+  const retryCountRef = useRef(0);
+  const maxRetries = 3;
+
+  // Display a message telling the user to start the backend
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    // Add initial message
+    setMessages(prev => [...prev, {
+      id: generateUniqueId(),
+      text: 'Connecting to chat service...',
+      type: 'system',
+      timestamp: new Date().toISOString()
+    }]);
+    
+    // If we're still connecting after 5 seconds, show a helpful message
+    const timer = setTimeout(() => {
+      if (isConnecting && !isConnected) {
+        setMessages(prev => [...prev, {
+          id: generateUniqueId(),
+          text: 'Having trouble connecting. Make sure the backend server is running with "npm run start:backend"',
+          type: 'system',
+          timestamp: new Date().toISOString()
+        }]);
+      }
+    }, 5000);
+    
+    return () => clearTimeout(timer);
+  }, [isConnecting, isConnected]);
+
+  // Connect to socket server with error handling
+  useEffect(() => {
+    console.log(`Connecting to Socket.IO server at: ${API_URL}`);
+    
+    let socketInstance = null;
+    let heartbeatInterval = null;
+    
+    // Only try to connect if we're not in an error state or if we've explicitly requested a retry
+    if (connectionError && retryCountRef.current === 0) {
+      setIsConnecting(false);
+      return;
     }
-  }, [liveChatHistory]);
+    
+    try {
+      // Create socket instance with more resilient settings
+      socketInstance = io(API_URL, {
+        reconnectionAttempts: 3,
+        reconnectionDelay: 1000,
+        timeout: 10000,
+        autoConnect: true,
+        transports: ['polling', 'websocket']  // Start with polling, then upgrade
+      });
+      
+      // Connection successful
+      socketInstance.on('connect', () => {
+        console.log('Connected to Socket.IO server');
+        setIsConnected(true);
+        setIsConnecting(false);
+        setConnectionError(false);
+        retryCountRef.current = 0;
+        
+        // Register as client
+        socketInstance.emit('client:connect', { id: clientId });
+        
+        // Add success message
+        setMessages(prev => [...prev, {
+          id: generateUniqueId(),
+          text: 'Connected! Waiting for an available operator...',
+          type: 'system',
+          timestamp: new Date().toISOString()
+        }]);
+      });
+      
+      // Connection failed
+      socketInstance.on('connect_error', (err) => {
+        console.error('Socket connection error:', err.message);
+        setConnectionError(true);
+        setIsConnecting(false);
+        
+        if (retryCountRef.current < maxRetries) {
+          retryCountRef.current += 1;
+          console.log(`Retry attempt ${retryCountRef.current} of ${maxRetries}`);
+          
+          setMessages(prev => [...prev, {
+            id: generateUniqueId(),
+            text: `Connection attempt failed (${retryCountRef.current}/${maxRetries}). Retrying...`,
+            type: 'system',
+            timestamp: new Date().toISOString()
+          }]);
+          
+          // Auto-retry with a delay
+          setTimeout(() => {
+            if (socketInstance) {
+              socketInstance.connect();
+            }
+          }, 3000);
+        } else {
+          setMessages(prev => [...prev, {
+            id: generateUniqueId(),
+            text: 'Could not connect to the chat service after multiple attempts. Please check if the backend server is running.',
+            type: 'system',
+            timestamp: new Date().toISOString()
+          }]);
+        }
+      });
+      
+      // Handle other Socket.IO events
+      socketInstance.on('disconnect', () => {
+        console.log('Disconnected from server');
+        setIsConnected(false);
+        setOperatorId(null);
+        
+        setMessages(prev => [...prev, {
+          id: generateUniqueId(),
+          text: 'Disconnected from chat. Please try again later.',
+          type: 'system',
+          timestamp: new Date().toISOString()
+        }]);
+      });
+      
+      socketInstance.on('operator:status', (data) => {
+        console.log('Operator status:', data);
+        if (!data.available) {
+          setMessages(prev => [...prev, {
+            id: generateUniqueId(),
+            text: 'No operators are online. Visit /operator to login as an operator.',
+            type: 'system',
+            timestamp: new Date().toISOString()
+          }]);
+        } else {
+          setMessages(prev => [...prev, {
+            id: generateUniqueId(),
+            text: 'Operators are online. Waiting for someone to assist you...',
+            type: 'system',
+            timestamp: new Date().toISOString()
+          }]);
+        }
+      });
+      
+      socketInstance.on('chat:accepted', (data) => {
+        console.log('Chat accepted:', data);
+        setOperatorId(data.operatorId);
+        
+        setMessages(prev => [...prev, {
+          id: generateUniqueId(),
+          text: 'An operator has joined the chat. You can now start messaging.',
+          type: 'system',
+          timestamp: new Date().toISOString()
+        }]);
+      });
+      
+      socketInstance.on('message:received', (data) => {
+        console.log('Message received:', data);
+        setMessages(prev => [...prev, {
+          id: generateUniqueId(),
+          text: data.text,
+          from: data.from,
+          type: data.type || 'text',
+          timestamp: data.timestamp
+        }]);
+      });
+      
+      // Set up heartbeat to keep connection alive
+      heartbeatInterval = setInterval(() => {
+        if (socketInstance && socketInstance.connected) {
+          socketInstance.emit('ping');
+        }
+      }, 25000);
+      
+      setSocket(socketInstance);
+    } catch (error) {
+      console.error("Error initializing socket:", error);
+      setConnectionError(true);
+      setIsConnecting(false);
+      
+      setMessages(prev => [...prev, {
+        id: generateUniqueId(),
+        text: 'Failed to initialize chat connection.',
+        type: 'system',
+        timestamp: new Date().toISOString()
+      }]);
+    }
+    
+    // Clean up on unmount
+    return () => {
+      console.log("Cleaning up socket connection");
+      
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+      }
+      
+      if (socketInstance) {
+        socketInstance.disconnect();
+      }
+    };
+  }, [API_URL, clientId, connectionError]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (message.trim()) {
-      sendMessage(message);
-      setMessage('');
-    }
-  };
-
-  const handleStartChat = () => {
-    if (name.trim()) {
-      requestLiveChat({ name });
-      setHasRequestedChat(true);
-    }
-  };
-
-  const handleEndChat = () => {
-    endChat();
-    onBack();
+    
+    if (!inputMessage.trim() || !isConnected || !socket) return;
+    
+    // Add to local messages
+    setMessages(prev => [...prev, {
+      id: generateUniqueId(),
+      text: inputMessage,
+      fromSelf: true,
+      type: 'text',
+      timestamp: new Date().toISOString()
+    }]);
+    
+    // Send to server
+    socket.emit('message:send', {
+      text: inputMessage,
+      to: operatorId,
+      type: 'text'
+    });
+    
+    setInputMessage('');
   };
 
   const formatTime = (timestamp) => {
-    if (!timestamp) return '';
+    if (!timestamp) return "";
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Show request form if not requested yet
-  if (!hasRequestedChat) {
-    return (
-      <Box className="live-chat-container">
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <IconButton onClick={onBack} sx={{ mr: 1 }}>
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h6" gutterBottom fontWeight="bold">
-            ოპერატორთან დაკავშირება
-          </Typography>
-        </Box>
-        
-        <Typography variant="body2" color="textSecondary" gutterBottom>
-          გთხოვთ შეიყვანოთ თქვენი სახელი ოპერატორთან დასაკავშირებლად
-        </Typography>
-        
-        <TextField
-          fullWidth
-          label="სახელი"
-          variant="outlined"
-          margin="normal"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        
-        <Button 
-          variant="contained" 
-          fullWidth 
-          sx={{ mt: 2 }}
-          onClick={handleStartChat}
-          disabled={!name.trim()}
-        >
-          დაკავშირება
-        </Button>
-      </Box>
-    );
-  }
+  // Manual reconnection handler
+  const handleManualReconnect = () => {
+    retryCountRef.current = 0;
+    setConnectionError(false);
+    setIsConnecting(true);
+    
+    setMessages(prev => [...prev, {
+      id: generateUniqueId(),
+      text: 'Attempting to reconnect...',
+      type: 'system',
+      timestamp: new Date().toISOString()
+    }]);
+  };
 
-  // Show waiting screen
-  if (isWaiting) {
-    return (
-      <Box className="live-chat-container waiting">
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <CircularProgress />
-          <Typography variant="h6">გთხოვთ მოითმინოთ...</Typography>
-          <Typography variant="body2">
-            {queuePosition > 0 
-              ? `თქვენ ხართ ${queuePosition} რიგში` 
-              : 'ოპერატორი მალე გიპასუხებთ'}
-          </Typography>
-          <Button 
-            variant="outlined" 
-            color="error" 
-            startIcon={<CallEndIcon />}
-            onClick={handleEndChat}
-          >
-            გაუქმება
-          </Button>
-        </Box>
-      </Box>
-    );
-  }
-
-  // Show active chat
   return (
     <Box className="live-chat-container">
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6" fontWeight="bold">
-          ოპერატორთან ჩეთი
-        </Typography>
-        <Button 
-          variant="outlined" 
-          color="error" 
-          size="small"
-          startIcon={<CallEndIcon />}
-          onClick={handleEndChat}
+      {connectionError && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 2 }}
+          action={
+            <Button 
+              color="inherit" 
+              size="small" 
+              onClick={handleManualReconnect}
+            >
+              Retry
+            </Button>
+          }
         >
-          დასრულება
-        </Button>
+          {retryCountRef.current >= maxRetries ? 
+            "Could not connect to chat server. Is the backend running?" : 
+            "Connection error. Click Retry to try again."}
+        </Alert>
+      )}
+      
+      <Box className="live-chat-header">
+        <IconButton onClick={onBack} edge="start" aria-label="back">
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h6">
+          ოპერატორთან ჩატი
+        </Typography>
+        <Box className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
+          {isConnected ? 'დაკავშირებულია' : 'არ არის დაკავშირებული'}
+        </Box>
       </Box>
       
-      <Divider sx={{ mb: 2 }} />
+      <Divider />
       
-      <Box className="live-chat-messages">
-        {liveChatHistory.length === 0 ? (
-          <Typography variant="body2" color="textSecondary" sx={{ textAlign: 'center', my: 4 }}>
-            მიესალმეთ ოპერატორს და დასვით თქვენი შეკითხვა
-          </Typography>
-        ) : (
-          liveChatHistory.map((msg, index) => (
-            <Box
-              key={index}
-              className={`chat-message ${msg.sender === 'user' ? 'user-message' : 'agent-message'}`}
-            >
-              {msg.sender !== 'user' && (
-                <Avatar 
-                  sx={{ width: 32, height: 32, mr: 1 }}
-                  alt="Agent"
-                >
-                  O
-                </Avatar>
-              )}
-              <Paper 
-                elevation={0} 
-                className={`message-bubble ${msg.sender === 'user' ? 'user-bubble' : 'agent-bubble'}`}
-              >
-                <Typography variant="body2">{msg.text}</Typography>
-                <Typography variant="caption" className="time-stamp">
-                  {formatTime(msg.timestamp)}
-                </Typography>
-              </Paper>
+      <Box className="messages-container">
+        {messages.map((msg) => (
+          <Box 
+            key={msg.id} 
+            className={`message ${msg.fromSelf ? 'self' : 'other'} ${msg.type === 'system' ? 'system' : ''}`}
+          >
+            {msg.type !== 'system' && !msg.fromSelf && (
+              <Avatar className="message-avatar">OP</Avatar>
+            )}
+            
+            <Box className="message-bubble">
+              <Typography variant="body1">{msg.text}</Typography>
+              <Typography variant="caption" className="message-time">
+                {formatTime(msg.timestamp)}
+              </Typography>
             </Box>
-          ))
-        )}
+          </Box>
+        ))}
         <div ref={messagesEndRef} />
+        
+        {isConnecting && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+            <CircularProgress size={24} />
+          </Box>
+        )}
       </Box>
       
       <Box 
         component="form" 
         onSubmit={handleSendMessage}
-        sx={{ 
-          display: 'flex', 
-          gap: 1, 
-          mt: 2,
-          position: 'sticky',
-          bottom: 0,
-          backgroundColor: 'white',
-          pt: 2
-        }}
+        className="message-input-container"
       >
         <TextField
-          fullWidth
-          placeholder="დაწერეთ შეტყობინება..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
           variant="outlined"
-          size="small"
+          fullWidth
+          placeholder={operatorId ? "დაწერეთ შეტყობინება..." : "ველოდებით ოპერატორს..."}
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          disabled={!isConnected || !operatorId}
+          InputProps={{
+            endAdornment: (
+              <Button
+                color="primary"
+                disabled={!isConnected || !operatorId || !inputMessage.trim()}
+                type="submit"
+              >
+                <SendIcon />
+              </Button>
+            ),
+          }}
         />
-        <Button 
-          type="submit"
-          variant="contained" 
-          disableElevation
-          disabled={!message.trim()}
-        >
-          <SendIcon />
-        </Button>
       </Box>
     </Box>
   );

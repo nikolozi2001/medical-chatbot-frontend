@@ -30,7 +30,7 @@ const LiveCallerWidget = ({ onChatButtonClick }) => {
     const checkTime = () => {
       const now = new Date();
       const currentHour = now.getHours();
-      setIsChatActive(currentHour >= 9 && currentHour < 17);
+      setIsChatActive(currentHour >= 9 && currentHour < 20);
     };
     checkTime();
     const interval = setInterval(checkTime, 60000);

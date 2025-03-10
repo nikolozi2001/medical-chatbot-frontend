@@ -1,7 +1,26 @@
-// Define your variables here
-$primary-color: #1e2a4a;
-$secondary-color: #16203a;
-$box-shadow-light: 0 4px 8px rgba(0, 0, 0, 0.1);
-$box-shadow-medium: 0 2px 10px rgba(0, 0, 0, 0.1);
-$background-color: #242424;
-$text-color: rgba(255, 255, 255, 0.87);
+// Color variables
+$primary-color: #1976d2;
+$secondary-color: #f5f5f5;
+$user-message-bg: #e3f2fd;
+$bot-message-bg: #f5f5f5;
+$error-color: #d32f2f;
+
+// Spacing variables
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+// Typography
+$font-size-small: 12px;
+$font-size-medium: 14px;
+$font-size-large: 16px;
+$font-size-xlarge: 18px;
+$font-size-xxlarge: 24px;
+
+// Breakpoints
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;

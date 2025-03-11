@@ -6,13 +6,9 @@ import "./InputForm.scss";
 
 const InputForm = ({ value, setValue, getResponse, error, loading, charLimit }) => {
   return (
+    // Changed from component="form" to just a div (Box)
     <Box
-      component="form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        getResponse();
-      }}
-      sx={{ width: "100%", display: "flex", alignItems: "center" }}
+      sx={{ width: "100%", display: "flex", alignItems: "center", position: "relative" }}
       className="chat-input-form"
     >
       <TextField
@@ -31,6 +27,10 @@ const InputForm = ({ value, setValue, getResponse, error, loading, charLimit }) 
               disabled={loading || !value || value.length > charLimit}
               type="submit"
               className="send-button"
+              onClick={(e) => {
+                e.preventDefault();
+                getResponse();
+              }}
             >
               {loading ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
             </Button>

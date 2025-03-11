@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, TextField, Button, CircularProgress, IconButton, Divider, Avatar, Alert } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { io } from 'socket.io-client';
 import PropTypes from 'prop-types';
+import { createSocketConnection, setupHeartbeat } from '../services/socketService';
+import { MESSAGE_TYPES } from '../constants/messageTypes';
 import './LiveChat.scss';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -57,7 +58,7 @@ const LiveChat = ({ onBack }) => {
     console.log(`Connecting to Socket.IO server at: ${API_URL}`);
     
     let socketInstance = null;
-    let heartbeatInterval = null;
+    let cleanupHeartbeat = () => {};
     
     // Only try to connect if we're not in an error state or if we've explicitly requested a retry
     if (connectionError && retryCountRef.current === 0) {
@@ -66,14 +67,8 @@ const LiveChat = ({ onBack }) => {
     }
     
     try {
-      // Create socket instance with more resilient settings
-      socketInstance = io(API_URL, {
-        reconnectionAttempts: 3,
-        reconnectionDelay: 1000,
-        timeout: 10000,
-        autoConnect: true,
-        transports: ['polling', 'websocket']  // Start with polling, then upgrade
-      });
+      // Create socket instance using the socketService
+      socketInstance = createSocketConnection(API_URL);
       
       // Connection successful
       socketInstance.on('connect', () => {
@@ -185,11 +180,7 @@ const LiveChat = ({ onBack }) => {
       });
       
       // Set up heartbeat to keep connection alive
-      heartbeatInterval = setInterval(() => {
-        if (socketInstance && socketInstance.connected) {
-          socketInstance.emit('ping');
-        }
-      }, 25000);
+      cleanupHeartbeat = setupHeartbeat(socketInstance);
       
       setSocket(socketInstance);
     } catch (error) {
@@ -209,9 +200,7 @@ const LiveChat = ({ onBack }) => {
     return () => {
       console.log("Cleaning up socket connection");
       
-      if (heartbeatInterval) {
-        clearInterval(heartbeatInterval);
-      }
+      cleanupHeartbeat();
       
       if (socketInstance) {
         socketInstance.disconnect();

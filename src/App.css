@@ -66,7 +66,8 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  overflow-x: hidden;
+  height: 100%;  /* Make it fill the available height */
+  overflow: hidden;  /* Hide overflow at container level */
   padding-top: 20px;
 }
 
@@ -119,10 +120,10 @@
   background-color: rgba(0, 120, 215, 0.1) !important;
 }
 
-.custom-history-button svg {
+/* .custom-history-button svg {
   color: var(--primary-color);
   font-size: 22px;
-}
+} */
 
 /* File attachment display */
 .file-attachment {
@@ -157,4 +158,217 @@
 
 .operator-login-link:hover {
   opacity: 1;
+}
+
+/* Modal content styling */
+.modal-inner-container {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-section {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding-top: 20px;
+}
+
+.chat-messages-area {
+  flex: 1;
+  overflow: auto;
+  margin-bottom: 16px;
+}
+
+.chat-input-area {
+  margin-top: auto;
+}
+
+.back-button {
+  margin-top: 16px !important;
+  margin-bottom: 16px !important;
+  align-self: flex-start;
+}
+
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+/* Consistent styling for both chat interfaces */
+.live-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  background-color: #ffffff;
+  border-radius: 12px;
+}
+
+.live-chat-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background-color: var(--primary-color);
+  color: white;
+  z-index: 2;
+}
+
+.live-chat-header h6 {
+  margin-left: 16px;
+  font-weight: 500;
+  flex-grow: 1;
+}
+
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: #fafafa;
+  background-image: linear-gradient(to bottom, rgba(227, 242, 253, 0.5), rgba(227, 242, 253, 0.1));
+  background-attachment: fixed;
+}
+
+.message {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 16px;
+  max-width: 85%;
+  animation: fadeIn 0.25s ease-in-out forwards;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message.self {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+  animation-delay: 0.1s;
+}
+
+.message.self .message-bubble {
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 12px 12px 0 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.message.self .message-time {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.message.other {
+  align-self: flex-start;
+  animation-delay: 0.2s;
+}
+
+.message.other .message-bubble {
+  background-color: white;
+  color: #333333;
+  border-radius: 12px 12px 12px 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  border: 1px solid #e0e0e0;
+}
+
+.message.system {
+  align-self: center;
+  max-width: 90%;
+  animation-delay: 0.05s;
+}
+
+.message.system .message-bubble {
+  background-color: rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  padding: 4px 24px;
+  border: 1px dashed #e0e0e0;
+}
+
+.message.system p {
+  color: rgba(0, 0, 0, 0.6);
+  font-style: italic;
+  font-size: 12px;
+  text-align: center;
+}
+
+.message.system.error .message-bubble {
+  background-color: rgba(211, 47, 47, 0.1);
+  border-left: 3px solid var(--error-color);
+}
+
+.message-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  margin-right: 4px;
+  background-color: var(--secondary-color) !important;
+  font-size: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  color: white !important;
+  font-weight: bold;
+}
+
+.message-bubble {
+  padding: 8px 16px;
+  position: relative;
+  border-radius: 12px;
+}
+
+.message-time {
+  display: block;
+  text-align: right;
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 4px;
+}
+
+.message-input-container {
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+  background-color: white;
+  display: flex;
+}
+
+/* Special handling for removing padding when showing AI chat */
+.modal-inner-content.chat-active {
+  padding: 0 !important;
+  height: 100%;
+}
+
+/* Ensure AI chat container takes full space */
+.modal-inner-content.chat-active .live-chat-container {
+  height: 100%;
+  border-radius: 0;
+}
+
+/* Position close button and history button over the chat */
+.modal-inner-content.chat-active .close-icon {
+  position: absolute;
+  top: 12px !important;
+  right: 12px !important;
+  z-index: 100;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.modal-inner-content.chat-active .history-button-wrapper {
+  position: absolute;
+  top: 12px;
+  right: 56px;
+  z-index: 100;
+}
+
+.modal-inner-content.chat-active .custom-history-button {
+  color: white;
+  background-color: rgba(0, 0, 0, 0.2) !important;
 }

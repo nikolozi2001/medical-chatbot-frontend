@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { io } from 'socket.io-client';
+import { createSocketConnection, setupHeartbeat } from '../services/socketService';
 import { playNotification } from '../utils/soundUtils';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -19,10 +19,15 @@ export const LiveChatProvider = ({ children }) => {
     // Only create the socket when in operator mode
     if (!operatorMode) return;
     
-    const newSocket = io(API_URL);
+    // Use the socket service to create a connection
+    const newSocket = createSocketConnection(API_URL);
     setSocket(newSocket);
     
+    // Setup heartbeat
+    const cleanupHeartbeat = setupHeartbeat(newSocket);
+    
     return () => {
+      cleanupHeartbeat();
       if (newSocket) newSocket.disconnect();
     };
   }, [operatorMode]);

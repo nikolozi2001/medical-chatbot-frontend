@@ -1,0 +1,15 @@
+/**
+ * Message types for the chat system
+ */
+export const MESSAGE_TYPES = {
+  CONNECTING: 'CONNECTING',
+  CONNECTED: 'CONNECTED',
+  OPERATOR_STATUS: 'OPERATOR_STATUS',
+  OPERATOR_JOINED: 'OPERATOR_JOINED',
+  ERROR: 'ERROR',
+  RETRY: 'RETRY',
+  USER: 'USER',
+  OPERATOR: 'OPERATOR'
+};
+
+export default MESSAGE_TYPES;

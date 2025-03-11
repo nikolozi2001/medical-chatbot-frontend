@@ -1,22 +1,10 @@
-import React, { useRef } from "react";
-import { TextField, Button, Box, Typography, IconButton, CircularProgress } from "@mui/material";
-import AttachFileIcon from '@mui/icons-material/AttachFile';
+import React from "react";
+import { TextField, Button, Box, Typography, CircularProgress } from "@mui/material";
 import SendIcon from '@mui/icons-material/Send';
 import PropTypes from "prop-types";
 import "./InputForm.scss";
 
-const InputForm = ({ value, setValue, getResponse, error, loading, charLimit, onFileUpload }) => {
-  const fileInputRef = useRef(null);
-  
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      onFileUpload(file);
-    }
-    // Reset the input to allow selecting the same file again
-    e.target.value = "";
-  };
-  
+const InputForm = ({ value, setValue, getResponse, error, loading, charLimit }) => {
   return (
     <Box
       component="form"
@@ -24,56 +12,39 @@ const InputForm = ({ value, setValue, getResponse, error, loading, charLimit, on
         e.preventDefault();
         getResponse();
       }}
-      sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}
+      sx={{ width: "100%", display: "flex", alignItems: "center" }}
+      className="chat-input-form"
     >
       <TextField
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        label="თქვენი შეკითხვა"
+        placeholder="დაწერეთ შეტყობინება..."
         variant="outlined"
-        multiline
-        rows={3}
-        error={!!error}
-        helperText={error}
-        disabled={loading}
+        size="medium"
         fullWidth
+        error={!!error}
+        disabled={loading}
+        InputProps={{
+          endAdornment: (
+            <Button
+              color="primary"
+              disabled={loading || !value || value.length > charLimit}
+              type="submit"
+              className="send-button"
+            >
+              {loading ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
+            </Button>
+          ),
+        }}
       />
       
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <IconButton 
-          onClick={() => fileInputRef.current.click()}
-          disabled={loading}
-          title="ფაილის მიმაგრება"
-          color="primary"
-        >
-          <AttachFileIcon />
-        </IconButton>
-        
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          style={{ display: 'none' }}
-          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-        />
-        
-        <Typography 
-          variant="caption" 
-          color={value.length > charLimit ? "error" : "textSecondary"}
-        >
-          {value.length}/{charLimit}
-        </Typography>
-      </Box>
-      
-      <Button
-        type="submit"
-        variant="contained"
-        color="primary"
-        disabled={loading || !value || value.length > charLimit}
-        endIcon={loading ? <CircularProgress size={16} color="inherit" /> : <SendIcon />}
+      <Typography 
+        variant="caption" 
+        color={value.length > charLimit ? "error" : "textSecondary"}
+        sx={{ position: "absolute", right: 48, bottom: 8, fontSize: "0.7rem" }}
       >
-        {loading ? "მოთხოვნის გაგზავნა..." : "გაგზავნა"}
-      </Button>
+        {value.length}/{charLimit}
+      </Typography>
     </Box>
   );
 };
@@ -84,13 +55,11 @@ InputForm.propTypes = {
   getResponse: PropTypes.func.isRequired,
   error: PropTypes.string,
   loading: PropTypes.bool,
-  charLimit: PropTypes.number,
-  onFileUpload: PropTypes.func,
+  charLimit: PropTypes.number
 };
 
 InputForm.defaultProps = {
-  charLimit: 500,
-  onFileUpload: () => {}
+  charLimit: 500
 };
 
 export default InputForm;

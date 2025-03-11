@@ -4,8 +4,10 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-height: 600px;
-  padding: $spacing-md 0;
+  background-color: $background-color;
+  border-radius: $border-radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow-md;
   
   &.waiting {
     justify-content: center;
@@ -61,109 +63,178 @@
       opacity: 0.7;
     }
   }
-}
 
-.live-chat-header {
-  display: flex;
-  align-items: center;
-  padding: $spacing-sm $spacing-md;
-  position: relative;
-  
-  h6 {
-    margin-left: $spacing-md;
-  }
-  
-  .connection-status {
-    position: absolute;
-    right: $spacing-md;
-    font-size: $font-size-small;
-    padding: 2px 8px;
-    border-radius: 12px;
-    
-    &.connected {
-      background-color: rgba(76, 175, 80, 0.1);
-      color: #4caf50;
-    }
-    
-    &.disconnected {
-      background-color: rgba(244, 67, 54, 0.1);
-      color: #f44336;
-    }
-  }
-}
-
-.messages-container {
-  flex: 1;
-  overflow-y: auto;
-  padding: $spacing-md;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-  
-  .message {
+  .live-chat-header {
     display: flex;
-    align-items: flex-end;
-    max-width: 80%;
+    align-items: center;
+    padding: $spacing-md;
+    background-color: $primary-color;
+    color: white;
+    position: relative;
+    box-shadow: $shadow-sm;
+    z-index: 2;
     
-    &.self {
-      align-self: flex-end;
-      flex-direction: row-reverse;
-      
-      .message-bubble {
-        background-color: $user-message-bg;
-        border-radius: 16px 16px 0 16px;
-      }
+    h6 {
+      margin-left: $spacing-md;
+      font-weight: 500;
+      flex-grow: 1;
     }
+  }
+
+  .messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: $spacing-md;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    background-color: $surface-color;
+    background-image: linear-gradient(to bottom, rgba($primary-light, 0.5), rgba($primary-light, 0.1));
+    background-attachment: fixed;
     
-    &.other {
-      align-self: flex-start;
+    .message {
+      display: flex;
+      align-items: flex-end;
+      margin-bottom: $spacing-md;
+      max-width: 85%;
+      animation: fadeIn $transition-medium forwards;
+      opacity: 0;
       
-      .message-bubble {
-        background-color: $bot-message-bg;
-        border-radius: 16px 16px 16px 0;
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
       }
-    }
-    
-    &.system {
-      align-self: center;
       
-      .message-bubble {
-        background-color: rgba(0, 0, 0, 0.05);
-        border-radius: 16px;
-        padding: $spacing-xs $spacing-md;
+      &.self {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+        animation-delay: 0.1s;
         
-        p {
-          color: rgba(0, 0, 0, 0.6);
-          font-style: italic;
-          font-size: $font-size-small;
+        .message-bubble {
+          background-color: $primary-color;
+          color: white;
+          border-radius: $border-radius-lg $border-radius-lg 0 $border-radius-lg;
+          box-shadow: $shadow-sm;
+          
+          .message-time {
+            color: rgba(255, 255, 255, 0.7);
+          }
+        }
+      }
+      
+      &.other {
+        align-self: flex-start;
+        animation-delay: 0.2s;
+        
+        .message-bubble {
+          background-color: white;
+          color: $bot-message-text;
+          border-radius: $border-radius-lg $border-radius-lg $border-radius-lg 0;
+          box-shadow: $shadow-sm;
+          border: 1px solid $border-color;
+        }
+      }
+      
+      &.system {
+        align-self: center;
+        max-width: 90%;
+        animation-delay: 0.05s;
+        
+        .message-bubble {
+          background-color: $system-message-bg;
+          border-radius: $border-radius-lg;
+          padding: $spacing-xs $spacing-lg;
+          border: 1px dashed $border-color;
+          
+          p {
+            color: rgba(0, 0, 0, 0.6);
+            font-style: italic;
+            font-size: $font-size-small;
+            text-align: center;
+          }
+        }
+      }
+      
+      .message-avatar {
+        width: 36px;
+        height: 36px;
+        margin-right: $spacing-xs;
+        background-color: $secondary-color;
+        font-size: $font-size-small;
+        box-shadow: $shadow-sm;
+        
+        &.self {
+          margin-left: $spacing-xs;
+          margin-right: 0;
+        }
+      }
+      
+      .message-bubble {
+        padding: $spacing-sm $spacing-md;
+        position: relative;
+        border-radius: $border-radius-lg;
+        
+        .message-time {
+          display: block;
+          text-align: right;
+          font-size: 10px;
+          color: rgba(0, 0, 0, 0.5);
+          margin-top: $spacing-xs;
         }
       }
     }
+  }
+
+  .message-input-container {
+    padding: $spacing-md;
+    border-top: 1px solid $border-color;
+    background-color: white;
+    display: flex;
     
-    .message-avatar {
-      width: 32px;
-      height: 32px;
-      margin-right: $spacing-xs;
-      background-color: $primary-color;
-      font-size: $font-size-small;
-    }
-    
-    .message-bubble {
-      padding: $spacing-sm $spacing-md;
-      position: relative;
-      
-      .message-time {
-        display: block;
-        text-align: right;
-        font-size: 10px;
-        color: rgba(0, 0, 0, 0.5);
-        margin-top: 2px;
+    .MuiTextField-root {
+      .MuiOutlinedInput-root {
+        border-radius: $border-radius-xl;
+        
+        &.Mui-focused {
+          .MuiOutlinedInput-notchedOutline {
+            border-color: $primary-color;
+          }
+        }
+        
+        .MuiInputAdornment-root {
+          button {
+            background-color: $primary-color;
+            color: white;
+            border-radius: $border-radius-circle;
+            width: 40px;
+            height: 40px;
+            min-width: 0;
+            transition: $transition-fast;
+            
+            &:hover {
+              background-color: $primary-dark;
+            }
+            
+            &:disabled {
+              background-color: rgba(0, 0, 0, 0.12);
+              color: rgba(0, 0, 0, 0.26);
+            }
+          }
+        }
       }
     }
   }
-}
-
-.message-input-container {
-  padding: $spacing-sm;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  
+  .live-chat-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-xl 0;
+    gap: $spacing-md;
+    
+    .MuiCircularProgress-root {
+      color: $primary-color;
+    }
+  }
 }

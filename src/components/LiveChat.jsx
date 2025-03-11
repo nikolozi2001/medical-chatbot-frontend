@@ -297,9 +297,7 @@ const LiveChat = ({ onBack }) => {
         <Typography variant="h6">
           ოპერატორთან ჩატი
         </Typography>
-        <Box className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-          {isConnected ? 'დაკავშირებულია' : 'არ არის დაკავშირებული'}
-        </Box>
+        {/* Connection status indicator removed */}
       </Box>
       
       <Divider />

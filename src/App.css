@@ -1,18 +1,65 @@
-/* ...existing code... */
+:root {
+  --primary-color: #0078D7;
+  --primary-dark: #005A9E;
+  --primary-light: #E3F2FD;
+  --secondary-color: #5C6BC0;
+  --error-color: #D32F2F;
+  --success-color: #2E7D32;
+}
 
-.sms_svg {
+.app {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* New chat button container to replace Badge */
+.chat-button-container {
   position: fixed;
   bottom: 30px;
   right: 30px;
-  width: 50px; /* Reduced from 60px */
-  height: 50px; /* Reduced from 60px */
+  border-radius: 50%;
   cursor: pointer;
-  transition: transform 0.3s ease;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  z-index: 100;
+  position: relative;
 }
 
-.sms_svg:hover {
+.sms_svg {
+  width: 60px;
+  height: 60px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.chat-button-container:hover .sms_svg {
   transform: scale(1.1);
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
+}
+
+/* Status indicator dot to replace Badge dot */
+.status-indicator {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.status-indicator.online {
+  background-color: var(--success-color);
+}
+
+.status-indicator.offline {
+  background-color: var(--error-color);
+}
+
+.pulse-btn {
+  border-radius: 50%;
+  box-shadow: 0 0 0 rgba(0, 120, 215, 0.4);
+  animation: pulse 2s infinite;
 }
 
 .chat-section {
@@ -20,59 +67,61 @@
   flex-direction: column;
   width: 100%;
   overflow-x: hidden;
-  padding-top: 15px; /* Add some padding at the top now that title is gone */
+  padding-top: 20px;
 }
 
 .error {
-  color: #d32f2f;
+  color: var(--error-color);
   margin: 8px 0;
-  padding: 6px;
-  border-radius: 4px;
+  padding: 10px 14px;
+  border-radius: 8px;
   background-color: rgba(211, 47, 47, 0.1);
   font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.error::before {
+  content: "⚠️";
+  margin-right: 8px;
 }
 
 .close-icon {
-  position: absolute;
+  position: absolute !important;
   top: 10px !important;
   right: 10px !important;
   z-index: 10;
+  transition: all 0.2s ease;
 }
 
 .close-icon:hover {
-  color: #d32f2f;
+  color: var(--error-color);
+  transform: rotate(90deg);
 }
 
-/* Ensure app content doesn't overflow */
-.app {
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-/* Connection status indicator */
-.connection-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* Custom history button styling */
+.history-button-wrapper {
   position: absolute;
-  top: 14px;
-  left: 15px;
+  top: 10px;
+  right: 50px;
+  z-index: 100;
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
+.custom-history-button {
+  transition: all 0.2s ease !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
 }
 
-.status-dot.online {
-  background-color: #4caf50;
+.custom-history-button:hover {
+  transform: rotate(30deg);
+  background-color: rgba(0, 120, 215, 0.1) !important;
 }
 
-.status-dot.offline {
-  background-color: #f44336;
+.custom-history-button svg {
+  color: var(--primary-color);
+  font-size: 22px;
 }
 
 /* File attachment display */
@@ -97,4 +146,15 @@
   white-space: nowrap;
 }
 
-/* ...existing code... */
+/* Operator login button styling */
+.operator-login-link {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.operator-login-link:hover {
+  opacity: 1;
+}

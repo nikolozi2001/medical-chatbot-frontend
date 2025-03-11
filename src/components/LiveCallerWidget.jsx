@@ -8,7 +8,7 @@ import "./LiveCallerWidget.scss";
 const LiveCallerWidget = ({ onChatButtonClick, onLiveChatClick, isOnline }) => {
   return (
     <Box className="live-caller-widget">
-      <Typography variant="h5" component="h2" sx={{ mb: 2, fontWeight: 'bold', textAlign: 'center' }}>
+      <Typography variant="h5" component="h2" sx={{ mb: 2, fontWeight: 'bold', textAlign: 'left' }}>
         გსურთ დახმარება?
       </Typography>
       

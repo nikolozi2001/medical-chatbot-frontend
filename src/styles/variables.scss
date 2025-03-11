@@ -1,26 +1,64 @@
-// Color variables
-$primary-color: #1976d2;
-$secondary-color: #f5f5f5;
-$user-message-bg: #e3f2fd;
-$bot-message-bg: #f5f5f5;
-$error-color: #d32f2f;
+// Color scheme - Using a professional medical theme
+$primary-color: #0078D7;          // Professional blue
+$primary-dark: #005A9E;           // Darker blue for hover states
+$primary-light: #E3F2FD;          // Light blue for backgrounds
+$secondary-color: #5C6BC0;        // Indigo as accent color
+$success-color: #2E7D32;          // Green for success states
+$error-color: #D32F2F;            // Red for error states
+$warning-color: #F9A825;          // Amber for warning states
+$info-color: #0288D1;             // Light blue for info
 
-// Spacing variables
-$spacing-xs: 4px;
-$spacing-sm: 8px;
-$spacing-md: 16px;
-$spacing-lg: 24px;
-$spacing-xl: 32px;
+// Chat message colors
+$user-message-bg: #E3F2FD;        // Light blue bubble for user
+$user-message-text: #0D47A1;      // Darker blue text for readability
+$bot-message-bg: #F5F5F5;         // Light grey bubble for bot
+$bot-message-text: #333333;       // Dark text for bot
+$system-message-bg: rgba(0, 0, 0, 0.04);    // Very light grey for system messages
+$operator-message-bg: #4527A0;    // Purple for operator messages
+$operator-message-text: #FFFFFF;  // White text for operator
+
+// Surface colors
+$background-color: #FFFFFF;       // White background
+$surface-color: #FAFAFA;          // Off-white for cards and surfaces
+$border-color: #E0E0E0;           // Light grey for borders
+$divider-color: #EEEEEE;          // Very light grey for dividers
 
 // Typography
+$font-primary: '"Segoe UI", Roboto, "Helvetica Neue", sans-serif';
 $font-size-small: 12px;
 $font-size-medium: 14px;
 $font-size-large: 16px;
 $font-size-xlarge: 18px;
 $font-size-xxlarge: 24px;
 
+// Spacing
+$spacing-xxs: 2px;
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-xxl: 48px;
+
+// Borders and shadows
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+$border-radius-xl: 16px;
+$border-radius-circle: 50%;
+
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+$shadow-md: 0 3px 6px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12);
+$shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 15px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.05);
+
 // Breakpoints
 $breakpoint-sm: 576px;
 $breakpoint-md: 768px;
 $breakpoint-lg: 992px;
 $breakpoint-xl: 1200px;
+
+// Animations
+$transition-fast: 0.15s ease-in-out;
+$transition-medium: 0.25s ease-in-out;
+$transition-slow: 0.4s ease-in-out;

@@ -215,22 +215,18 @@ const AppContent = () => {
 
   return (
     <div className="app">
-      <Badge 
-        color={isOnline ? "success" : "error"}
-        variant="dot"
-        overlap="circular"
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
+      {/* Replace the Badge with a custom styled button */}
+      <Box 
+        className={`chat-button-container ${isOnline ? 'online' : 'offline'}`}
+        onClick={() => setIsModalOpen(true)}
       >
         <img
-          onClick={() => setIsModalOpen(true)}
           src={SmsSvg}
           alt="SMS Icon"
           className="sms_svg"
         />
-      </Badge>
+        <span className={`status-indicator ${isOnline ? 'online' : 'offline'}`}></span>
+      </Box>
       
       {/* Add Operator Login Link */}
       <Box 
@@ -267,24 +263,33 @@ const AppContent = () => {
               <CloseIcon />
             </IconButton>
             
-            {/* Online status indicator */}
-            <div className="connection-status">
-              <span className={`status-dot ${isOnline ? 'online' : 'offline'}`}></span>
-              <Typography variant="caption">
-                {isOnline ? 'დაკავშირებულია' : 'არ არის დაკავშირებული'}
-              </Typography>
-            </div>
-            
-            {/* History button */}
+            {/* History button with custom styling */}
             {allChats.length > 0 && !showChatHistory && !showLiveChat && (
-              <IconButton 
-                className="history-button"
-                onClick={() => setShowChatHistory(true)}
-                title="ისტორია"
-                sx={{ position: 'absolute', top: 10, right: 50 }}
+              <Box 
+                className="history-button-wrapper"
+                sx={{ 
+                  position: 'absolute',
+                  top: 10,
+                  right: 50,
+                  zIndex: 5
+                }}
               >
-                <HistoryIcon />
-              </IconButton>
+                <IconButton 
+                  className="custom-history-button"
+                  onClick={() => setShowChatHistory(true)}
+                  title="ისტორია"
+                  color="primary"
+                  size="medium"
+                  sx={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                    }
+                  }}
+                >
+                  <HistoryIcon />
+                </IconButton>
+              </Box>
             )}
 
             {/* LiveCaller widget */}

@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { io } from 'socket.io-client';
+import { playNotification } from '../utils/soundUtils';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const LiveChatContext = createContext();
@@ -12,6 +13,7 @@ export const LiveChatProvider = ({ children }) => {
   const [clients, setClients] = useState([]);
   const [currentClient, setCurrentClient] = useState(null);
   const [chats, setChats] = useState({}); // clientId -> messages[]
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   useEffect(() => {
     // Only create the socket when in operator mode
@@ -49,6 +51,11 @@ export const LiveChatProvider = ({ children }) => {
     const handleNewClient = (client) => {
       console.log('New client connected:', client);
       setClients(prev => [...prev, client]);
+      
+      // Play notification sound when in operator mode and sound is enabled
+      if (operatorMode && soundEnabled) {
+        playNotification('notification.mp3', { volume: 0.7 });
+      }
     };
     
     const handleClientLeft = (data) => {
@@ -89,6 +96,11 @@ export const LiveChatProvider = ({ children }) => {
         const newClient = { id: clientId, hasOperator: false };
         setClients(prev => [...prev, newClient]);
       }
+      
+      // Play notification when receiving a new message when not focused
+      if (operatorMode && soundEnabled && !document.hasFocus()) {
+        playNotification('notification.mp3', { volume: 0.5 });
+      }
     };
 
     socket.on('connect', handleConnect);
@@ -108,7 +120,7 @@ export const LiveChatProvider = ({ children }) => {
       socket.off('client:updated', handleClientUpdated);
       socket.off('message:received', handleMessageReceived);
     };
-  }, [socket, clients, currentClient]);
+  }, [socket, clients, currentClient, operatorMode, soundEnabled]);
 
   const acceptClient = (clientId) => {
     if (!socket || !isConnected) return;
@@ -149,6 +161,7 @@ export const LiveChatProvider = ({ children }) => {
   };
 
   const enableOperatorMode = () => setOperatorMode(true);
+  
   const disableOperatorMode = () => {
     setOperatorMode(false);
     setCurrentClient(null);
@@ -166,7 +179,9 @@ export const LiveChatProvider = ({ children }) => {
     disableOperatorMode,
     acceptClient,
     sendMessage,
-    setCurrentClient
+    setCurrentClient,
+    soundEnabled,
+    setSoundEnabled
   };
 
   return (

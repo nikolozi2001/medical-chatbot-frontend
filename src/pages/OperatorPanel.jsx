@@ -16,11 +16,15 @@ import {
   Badge,
   Container,
   Card,
-  CardContent
+  CardContent,
+  Switch,
+  FormControlLabel
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import PersonIcon from '@mui/icons-material/Person';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import { useNavigate } from 'react-router-dom';
 import { useLiveChat } from '../context/LiveChatContext';
 import './OperatorPanel.scss';
@@ -43,6 +47,7 @@ const OperatorPanel = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -121,15 +126,40 @@ const OperatorPanel = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Operator Control Panel
           </Typography>
-          <Badge 
-            color={isConnected ? "success" : "error"}
-            variant="dot"
-            overlap="circular"
+          
+          {/* Sound toggle switch */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={soundEnabled}
+                onChange={(e) => setSoundEnabled(e.target.checked)}
+                color="default"
+                size="small"
+              />
+            }
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', color: 'white' }}>
+                {soundEnabled ? <VolumeUpIcon fontSize="small" /> : <VolumeOffIcon fontSize="small" />}
+              </Box>
+            }
+            sx={{ mr: 2, '.MuiFormControlLabel-label': { display: 'flex' } }}
+          />
+          
+          {/* Replace Badge with custom status indicator */}
+          <Box 
+            className={`status-indicator-container ${isConnected ? 'online' : 'offline'}`}
+            sx={{ 
+              display: 'flex',
+              alignItems: 'center',
+              mr: 2
+            }}
           >
-            <Typography variant="body2" sx={{ mr: 2 }}>
-              Status: {isConnected ? 'Online' : 'Offline'}
+            <span className={`status-dot ${isConnected ? 'online' : 'offline'}`}></span>
+            <Typography variant="body2" sx={{ ml: 1 }}>
+              {isConnected ? 'Online' : 'Offline'}
             </Typography>
-          </Badge>
+          </Box>
+          
           <IconButton 
             color="inherit" 
             onClick={() => {

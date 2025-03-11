@@ -6,38 +6,126 @@
   top: 50%;
   right: 30px;
   transform: translateY(-50%);
-  background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  width: 35%;
-  max-width: 450px;
-  height: auto;
-  max-height: 80vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  transition: all 0.3s ease-in-out;
+  background-color: $background-color;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-xl;
+  width: 400px;
+  max-width: 90vw;
+  height: 85vh;
+  max-height: 600px;
+  overflow: hidden;
+  transition: all $transition-medium;
   z-index: 1000;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  animation: slideInFromRight $transition-medium forwards;
   
-  // Responsive adjustments
+  @keyframes slideInFromRight {
+    from { opacity: 0; transform: translateY(-50%) translateX(50px); }
+    to { opacity: 1; transform: translateY(-50%) translateX(0); }
+  }
+  
   @media (max-width: $breakpoint-md) {
-    width: 50%;
+    width: 70vw;
     right: 20px;
   }
   
   @media (max-width: $breakpoint-sm) {
-    width: 85%;
-    right: 10px;
-    max-height: 85vh;
-    border-radius: 12px;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 80vh;
+    transform: none;
+    border-radius: $border-radius-lg $border-radius-lg 0 0;
+    animation: slideInFromBottom $transition-medium forwards;
+    
+    @keyframes slideInFromBottom {
+      from { opacity: 0; transform: translateY(50px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   }
 
   .modal-content {
     padding: $spacing-md;
-    position: relative;  /* For positioning the close button */
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     
     @media (max-width: $breakpoint-sm) {
       padding: $spacing-sm;
+    }
+    
+    .close-icon {
+      position: absolute;
+      top: $spacing-sm;
+      right: $spacing-sm;
+      z-index: 5;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: rgba(0, 0, 0, 0.54);
+      transition: $transition-fast;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      
+      &:hover {
+        color: $error-color;
+        background-color: rgba($error-color, 0.08);
+        transform: rotate(90deg);
+      }
+    }
+    
+    // Ensure all buttons in the modal header area have consistent styling
+    .modal-header-buttons {
+      position: absolute;
+      top: $spacing-sm;
+      right: $spacing-sm;
+      display: flex;
+      gap: $spacing-xs;
+      z-index: 10;
+      
+      .MuiIconButton-root {  // Target all Material UI IconButtons
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        transition: $transition-fast;
+        
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.04);
+        }
+      }
+    }
+    
+    .connection-status {
+      position: absolute;
+      top: $spacing-md;
+      left: $spacing-md;
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+      font-size: $font-size-small;
+      
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: $border-radius-circle;
+      }
+      
+      .status-dot.online {
+        background-color: $success-color;
+        box-shadow: 0 0 0 2px rgba($success-color, 0.2);
+      }
+      
+      .status-dot.offline {
+        background-color: $error-color;
+        box-shadow: 0 0 0 2px rgba($error-color, 0.2);
+      }
     }
   }
 }

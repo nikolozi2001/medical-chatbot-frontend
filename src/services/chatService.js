@@ -1,3 +1,5 @@
+import { findPredefinedAnswer } from '../data/predefinedAnswers';
+
 /**
  * Sends a chat message to the API
  * @param {string} apiUrl - The API URL
@@ -6,6 +8,19 @@
  * @returns {Promise} - Promise resolving to the response
  */
 export const sendChatMessage = async (apiUrl, message, sessionId) => {
+  // First check if we have a predefined answer
+  const predefinedAnswer = findPredefinedAnswer(message);
+  
+  if (predefinedAnswer) {
+    // Return the predefined answer without calling the API
+    console.log('Using predefined answer for:', message);
+    return {
+      text: predefinedAnswer,
+      isPredefined: true
+    };
+  }
+  
+  // Continue with normal API call for non-predefined questions
   const options = {
     method: "POST",
     body: JSON.stringify({

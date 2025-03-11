@@ -112,17 +112,17 @@ const AppContent = () => {
     setShowLiveCaller(false);
 
     try {
-      // Use the chat service instead of inline fetch call
+      // Use the chat service to check for predefined answers first
       const data = await sendChatMessage(CHAT_ENDPOINT, value, sessionId);
-      console.log(data);
 
-      // Add to chat history
+      // Add to chat history, marking predefined answers
       setChatHistory((prev) => [
         ...prev,
         { type: "user", message: value, timestamp: new Date().toISOString() },
         {
           type: "bot",
           message: data.text,
+          isPredefined: data.isPredefined, // This flag indicates a predefined answer
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -273,11 +273,11 @@ const AppContent = () => {
                     {chatHistory.map((entry, index) => (
                       <Box 
                         key={index} 
-                        className={`message ${entry.type === 'user' ? 'self' : 'other'}`}
+                        className={`message ${entry.type === 'user' ? 'self' : 'other'} ${entry.isPredefined ? 'predefined' : ''}`}
                       >
                         {entry.type === 'bot' && (
                           <IconButton className="message-avatar" size="small">
-                            AI
+                            {entry.isPredefined ? "DB" : "AI"}
                           </IconButton>
                         )}
                         
@@ -288,6 +288,7 @@ const AppContent = () => {
                               hour: '2-digit', 
                               minute: '2-digit' 
                             })}
+                            {entry.isPredefined && " • Predefined"}
                           </Typography>
                         </Box>
                       </Box>

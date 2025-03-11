@@ -282,6 +282,16 @@
   border: 1px solid #e0e0e0;
 }
 
+/* Styling for predefined answers */
+.message.other.predefined .message-bubble {
+  background-color: #E8F5E9; /* Light green background */
+  border-left: 3px solid #4CAF50; /* Green indicator */
+}
+
+.message.other.predefined .message-avatar {
+  background-color: #4CAF50 !important; /* Green avatar for predefined answers */
+}
+
 .message.system {
   align-self: center;
   max-width: 90%;

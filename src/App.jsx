@@ -39,6 +39,7 @@ const AppContent = () => {
   const [showLiveChat, setShowLiveChat] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [sessionId, setSessionId] = useState("");
+  const [pendingMessages, setPendingMessages] = useState([]);
 
   const MAX_CHARS = 500; // Maximum character limit
 
@@ -91,6 +92,29 @@ const AppContent = () => {
     }
   }, [chatHistory]);
 
+  // Add logic to send pending messages when connection returns
+  useEffect(() => {
+    if (isOnline && pendingMessages.length > 0) {
+      // Process pending messages
+      const processPendingMessages = async () => {
+        for (const msg of pendingMessages) {
+          try {
+            await sendChatMessage(CHAT_ENDPOINT, msg.text, msg.clientId);
+            // Update UI to show message sent
+            setChatHistory(prev => prev.map(item => 
+              item.timestamp === msg.timestamp ? { ...item, pending: false } : item
+            ));
+          } catch (error) {
+            console.error("Failed to send pending message:", error);
+          }
+        }
+        setPendingMessages([]);
+      };
+      
+      processPendingMessages();
+    }
+  }, [isOnline, pendingMessages]);
+
   const getResponse = async () => {
     if (!value) {
       setError("გთხოვთ ჩაწეროთ შეკითხვა");
@@ -135,6 +159,36 @@ const AppContent = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSendMessage = () => {
+    const messageObj = {
+      text: value,
+      clientId: sessionId,
+      timestamp: new Date().toISOString(),
+      pending: !isOnline
+    };
+    
+    if (!isOnline) {
+      // Store in pending queue
+      setPendingMessages(prev => [...prev, messageObj]);
+      
+      // Show in UI immediately
+      setChatHistory(prev => [
+        ...prev,
+        { 
+          type: "user", 
+          message: value, 
+          timestamp: messageObj.timestamp,
+          pending: true
+        }
+      ]);
+      
+      setValue("");
+      return;
+    }
+    
+    // Online sending logic...
   };
 
   const resetChat = () => {

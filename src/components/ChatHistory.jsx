@@ -2,10 +2,9 @@ import React, { useState } from "react";
 import { 
   Box, 
   Typography, 
-  List, 
+  List,
   ListItem, 
   ListItemText, 
-  Button, 
   TextField, 
   InputAdornment,
   IconButton,
@@ -13,7 +12,6 @@ import {
   ListItemButton
 } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
-import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PropTypes from "prop-types";
 import "./ChatHistory.scss";

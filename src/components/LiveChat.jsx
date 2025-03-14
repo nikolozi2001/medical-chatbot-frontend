@@ -41,6 +41,11 @@ const LiveChat = ({ onBack }) => {
   const retryCountRef = useRef(0);
   const maxRetries = 3;
 
+  // Add typing state
+  const [isTyping, setIsTyping] = useState(false);
+  const [peerIsTyping, setPeerIsTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
+
   // Display a message telling the user to start the backend
   useEffect(() => {
     // Add initial message
@@ -219,6 +224,10 @@ const LiveChat = ({ onBack }) => {
         ]);
       });
 
+      // Listen for typing events
+      socketInstance.on('typing', () => setPeerIsTyping(true));
+      socketInstance.on('stopped-typing', () => setPeerIsTyping(false));
+
       // Set up heartbeat to keep connection alive
       cleanupHeartbeat = setupHeartbeat(socketInstance);
 
@@ -304,6 +313,25 @@ const LiveChat = ({ onBack }) => {
     ]);
   };
 
+  // Add debounced typing emission
+  const emitTyping = () => {
+    if (!isTyping) {
+      setIsTyping(true);
+      socket.emit('typing', { clientId });
+    }
+    
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // Set new timeout
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      socket.emit('stopped-typing', { clientId });
+    }, 1000);
+  };
+
   return (
     <Box className="live-chat-container">
       {connectionError && (
@@ -358,6 +386,14 @@ const LiveChat = ({ onBack }) => {
         ))}
         <div ref={messagesEndRef} />
 
+        {peerIsTyping && (
+          <div className="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        )}
+
         {isConnecting && (
           <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
             <CircularProgress size={24} />
@@ -377,7 +413,10 @@ const LiveChat = ({ onBack }) => {
             operatorId ? "დაწერეთ შეტყობინება..." : "ველოდებით ოპერატორს..."
           }
           value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
+          onChange={(e) => {
+            setInputMessage(e.target.value);
+            emitTyping();
+          }}
           disabled={!isConnected || !operatorId}
           InputProps={{
             endAdornment: (

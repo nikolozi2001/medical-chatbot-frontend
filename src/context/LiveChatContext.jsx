@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import {
   createSocketConnection,
@@ -9,6 +9,8 @@ import { playNotification } from "../utils/soundUtils";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const LiveChatContext = createContext();
 
+// Remove the unused useBatchUpdate function
+
 export const LiveChatProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -17,6 +19,38 @@ export const LiveChatProvider = ({ children }) => {
   const [currentClient, setCurrentClient] = useState(null);
   const [chats, setChats] = useState({}); // clientId -> messages[]
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Define handleMessageReceived at the component level with useCallback
+  const handleMessageReceived = useCallback((message) => {
+    const clientId = message.from;
+
+    setChats((prev) => ({
+      ...prev,
+      [clientId]: [
+        ...(prev[clientId] || []),
+        {
+          id: Date.now(),
+          text: message.text,
+          fromClient: true,
+          timestamp: message.timestamp,
+        },
+      ],
+    }));
+
+    // If this is a new client that we haven't seen before, add them to our list
+    setClients((prev) => {
+      if (!prev.find((c) => c.id === clientId)) {
+        const newClient = { id: clientId, hasOperator: false };
+        return [...prev, newClient];
+      }
+      return prev;
+    });
+
+    // Play notification when receiving a new message when not focused
+    if (operatorMode && soundEnabled && !document.hasFocus()) {
+      playNotification("notification.mp3", { volume: 0.5 });
+    }
+  }, [clients, operatorMode, soundEnabled]);
 
   useEffect(() => {
     // Only create the socket when in operator mode
@@ -80,34 +114,6 @@ export const LiveChatProvider = ({ children }) => {
       );
     };
 
-    const handleMessageReceived = (message) => {
-      const clientId = message.from;
-
-      setChats((prev) => ({
-        ...prev,
-        [clientId]: [
-          ...(prev[clientId] || []),
-          {
-            id: Date.now(),
-            text: message.text,
-            fromClient: true,
-            timestamp: message.timestamp,
-          },
-        ],
-      }));
-
-      // If this is a new client that we haven't seen before, add them to our list
-      if (!clients.find((c) => c.id === clientId)) {
-        const newClient = { id: clientId, hasOperator: false };
-        setClients((prev) => [...prev, newClient]);
-      }
-
-      // Play notification when receiving a new message when not focused
-      if (operatorMode && soundEnabled && !document.hasFocus()) {
-        playNotification("notification.mp3", { volume: 0.5 });
-      }
-    };
-
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
     socket.on("clients:list", handleClientsList);
@@ -125,7 +131,7 @@ export const LiveChatProvider = ({ children }) => {
       socket.off("client:updated", handleClientUpdated);
       socket.off("message:received", handleMessageReceived);
     };
-  }, [socket, clients, currentClient, operatorMode, soundEnabled]);
+  }, [socket, handleMessageReceived, currentClient, operatorMode, soundEnabled]);
 
   const acceptClient = (clientId) => {
     if (!socket || !isConnected) return;

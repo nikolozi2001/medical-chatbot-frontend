@@ -9,7 +9,8 @@ import {
   TextField, 
   InputAdornment,
   IconButton,
-  Divider
+  Divider,
+  ListItemButton
 } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -75,15 +76,16 @@ const ChatHistory = ({ chatSessions, onSelectSession, onBack }) => {
         ) : (
           filteredSessions.map((session) => (
             <React.Fragment key={session.id}>
-              <ListItem 
-                button 
-                onClick={() => onSelectSession(session)}
-                className="chat-history-item"
-              >
-                <ListItemText 
-                  primary={formatDate(session.date)}
-                  secondary={getPreviewText(session.messages)}
-                />
+              <ListItem disablePadding>
+                <ListItemButton 
+                  onClick={() => onSelectSession(session)}
+                  className="chat-history-item"
+                >
+                  <ListItemText 
+                    primary={formatDate(session.date)}
+                    secondary={getPreviewText(session.messages)}
+                  />
+                </ListItemButton>
               </ListItem>
               <Divider component="li" />
             </React.Fragment>

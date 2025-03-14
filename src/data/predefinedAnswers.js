@@ -5,8 +5,9 @@
  */
 export const PREDEFINED_QA = {
   // English questions
+  "hello": "Hello, how can I help you?",
   "what is your name?": "I am MediBot, your personal medical assistant.",
-  "who created you?": "I was created by a team of developers to provide medical information.",
+  "who created you?": "I was created by Nika Kachibaia to provide medical information.",
   "how does blood pressure work?": "Blood pressure is the force of blood pushing against the walls of your arteries. It's measured using two numbers: systolic (top number) and diastolic (bottom number).",
   
   // You can add variations of the same question
@@ -14,8 +15,9 @@ export const PREDEFINED_QA = {
   "how to treat headache?": "For a headache, you can try resting in a quiet dark room, staying hydrated, and taking over-the-counter pain relievers like acetaminophen or ibuprofen. If headaches are severe or persistent, please consult with a healthcare provider.",
   
   // Georgian questions
+  "გამარჯობა": "გამარჯობა, რით შემიძლია დაგეხმაროთ?",
   "რა გქვია?": "მე ვარ მედიბოტი, თქვენი პირადი სამედიცინო ასისტენტი.",
-  "ვინ შეგქმნა?": "მე შემქმნა დეველოპერების გუნდმა სამედიცინო ინფორმაციის მისაწოდებლად.",
+  "ვინ შეგქმნა?": "მე შემქმნა ნიკოლოზ ქაჩიბაიამ სამედიცინო ინფორმაციის მისაწოდებლად.",
   "რა არის სისხლის წნევა?": "სისხლის წნევა არის ძალა, რომელსაც სისხლი ახდენს არტერიების კედლებზე. იგი იზომება ორი რიცხვით: სისტოლური (ზედა რიცხვი) და დიასტოლური (ქვედა რიცხვი).",
 
   // Headache related questions in Georgian

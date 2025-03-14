@@ -100,6 +100,17 @@
   transform: rotate(90deg);
 }
 
+/* Improved close icon styling */
+.close-icon {
+  opacity: 0.7;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.close-icon:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
 /* Custom history button styling */
 .history-button-wrapper {
   position: absolute;
@@ -381,4 +392,42 @@
 .modal-inner-content.chat-active .custom-history-button {
   color: white;
   background-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Improved clear all button */
+.clear-all-btn {
+  font-weight: 500;
+  border-radius: 20px;
+  transition: all 0.2s ease-in-out;
+  padding: 4px 12px;
+}
+
+.clear-all-btn:hover {
+  background-color: rgba(211, 47, 47, 0.08) !important;
+}
+
+/* Animation for delete button */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.list-item-delete:hover {
+  animation: pulse 0.5s infinite;
+}
+
+/* Prevent horizontal scrolling in chat history */
+.MuiList-root {
+  overflow-x: hidden !important;
+}
+
+.MuiListItem-root {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.MuiListItemText-root {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

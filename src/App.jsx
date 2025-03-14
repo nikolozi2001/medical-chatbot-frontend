@@ -228,6 +228,31 @@ const AppContent = () => {
     setShowChatForm(false);
   };
 
+  // Add these new functions to handle chat history deletion
+
+  const handleDeleteSession = (sessionId) => {
+    // Remove session from all chats
+    const updatedChats = allChats.filter((chat) => chat.id !== sessionId);
+    setAllChats(updatedChats);
+    
+    // Update localStorage
+    localStorage.setItem("medicalChatHistory", JSON.stringify(updatedChats));
+    
+    // If the deleted session was the current session, reset the chat
+    if (sessionId === sessionId) {
+      resetChat();
+    }
+  };
+
+  const handleClearAllHistory = () => {
+    // Clear all chat history
+    setAllChats([]);
+    localStorage.removeItem("medicalChatHistory");
+    
+    // Reset current chat if needed
+    resetChat();
+  };
+
   return (
     <div className="app">
       {/* Replace the Badge with a custom styled button */}
@@ -275,8 +300,25 @@ const AppContent = () => {
                 aria-label="close"
                 className="close-icon"
                 onClick={() => setIsModalOpen(false)}
+                sx={{
+                  position: 'absolute',
+                  right: '16px',  // Increased from 10px
+                  top: '16px',    // Increased from 10px
+                  color: 'gray',
+                  zIndex: 1000,   // Increased z-index significantly
+                  bgcolor: 'rgba(255, 255, 255, 0.8)',
+                  width: '32px',  // Fixed width
+                  height: '32px', // Fixed height
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 255, 255, 0.95)',
+                    color: 'black',
+                    transform: 'scale(1.05)'
+                  },
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.08)'
+                }}
               >
-                <CloseIcon />
+                <CloseIcon fontSize="small" />
               </IconButton>
 
               {/* History button */}
@@ -308,6 +350,8 @@ const AppContent = () => {
                   chatSessions={allChats}
                   onSelectSession={loadChatSession}
                   onBack={() => setShowChatHistory(false)}
+                  onDeleteSession={handleDeleteSession}
+                  onClearHistory={handleClearAllHistory}
                 />
               )}
 

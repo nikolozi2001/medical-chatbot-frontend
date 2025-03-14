@@ -41,7 +41,6 @@ const OperatorPanel = () => {
     clients, 
     currentClient, 
     chats,
-    enableOperatorMode,
     disableOperatorMode, 
     acceptClient, 
     sendMessage, 

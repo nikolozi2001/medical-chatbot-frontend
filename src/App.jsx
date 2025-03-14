@@ -22,6 +22,8 @@ import LiveChat from "./components/LiveChat";
 import OperatorPanel from "./pages/OperatorPanel";
 import OperatorSignup from "./pages/OperatorSignup";
 import OperatorLogin from "./pages/OperatorLogin";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import { LiveChatProvider } from "./context/LiveChatContext";
 import { CHAT_ENDPOINT } from "./config/api";
 import { sendChatMessage, uploadFile, fetchChatHistory, deleteChatSession, clearChatHistory } from "./services/chatService";
@@ -494,6 +496,8 @@ const App = () => (
         <Route path="/operator" element={<OperatorPanel />} />
         <Route path="/operator/signup" element={<OperatorSignup />} />
         <Route path="/operator/login" element={<OperatorLogin />} />
+        <Route path="/operator/forgot-password" element={<ForgotPassword />} />
+        <Route path="/operator/reset-password" element={<ResetPassword />} />
         <Route path="/" element={<AppContent />} />
       </Routes>
     </BrowserRouter>

@@ -1,5 +1,6 @@
 // Import JWT Decode - to install, run: npm install jwt-decode
 import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 
 // Store the API URL
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -176,4 +177,43 @@ export const isOperatorLoggedIn = () => {
 export const getCurrentOperator = () => {
   const operatorData = localStorage.getItem('operatorData');
   return operatorData ? JSON.parse(operatorData) : null;
+};
+
+/**
+ * Request a password reset email
+ * @param {string} email - The email address to send the reset link to
+ * @returns {Promise<Object>} - The response from the server
+ */
+export const requestPasswordReset = async (email) => {
+  const response = await axios.post(`${API_URL}/api/operators/forgot-password`, { email });
+  return response.data;
+};
+
+/**
+ * Validate a password reset token
+ * @param {string} token - The reset token
+ * @param {string} email - The email address associated with the token
+ * @returns {Promise<Object>} - The response from the server
+ */
+export const validateResetToken = async (token, email) => {
+  const response = await axios.get(`${API_URL}/api/operators/validate-reset-token`, {
+    params: { token, email }
+  });
+  return response.data;
+};
+
+/**
+ * Reset the password using a valid token
+ * @param {string} token - The reset token
+ * @param {string} email - The email address associated with the token
+ * @param {string} password - The new password
+ * @returns {Promise<Object>} - The response from the server
+ */
+export const resetPassword = async (token, email, password) => {
+  const response = await axios.post(`${API_URL}/api/operators/reset-password`, {
+    token,
+    email,
+    password
+  });
+  return response.data;
 };

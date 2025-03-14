@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
@@ -18,15 +18,20 @@ import {
   Card,
   CardContent,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Menu,
+  MenuItem,
+  Avatar
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import PersonIcon from '@mui/icons-material/Person';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { useNavigate } from 'react-router-dom';
 import { useLiveChat } from '../context/LiveChatContext';
+import { isOperatorLoggedIn, logoutOperator } from '../services/authService';
 import './OperatorPanel.scss';
 
 const OperatorPanel = () => {
@@ -40,26 +45,21 @@ const OperatorPanel = () => {
     disableOperatorMode, 
     acceptClient, 
     sendMessage, 
-    setCurrentClient 
+    setCurrentClient,
+    soundEnabled,
+    setSoundEnabled,
+    operatorData
   } = useLiveChat();
   
   const [message, setMessage] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [anchorEl, setAnchorEl] = useState(null);
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    // Simple authentication for demo purposes - in production, use proper auth
-    if (password === 'operator123') {
-      setIsAuthenticated(true);
-      enableOperatorMode();
-      setError('');
-    } else {
-      setError('Invalid password');
+  // Check if operator is logged in
+  useEffect(() => {
+    if (!isOperatorLoggedIn()) {
+      navigate('/operator/login');
     }
-  };
+  }, [navigate]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -74,47 +74,26 @@ const OperatorPanel = () => {
     acceptClient(client.id);
   };
 
-  if (!isAuthenticated) {
+  const handleOpenMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    logoutOperator();
+    disableOperatorMode();
+    navigate('/operator/login');
+    handleCloseMenu();
+  };
+
+  // If we don't have operator data yet but we're checking login status, show loading
+  if (!operatorData && isOperatorLoggedIn()) {
     return (
-      <Container maxWidth="sm" sx={{ pt: 8 }}>
-        <Card>
-          <CardContent>
-            <Typography variant="h5" gutterBottom textAlign="center">
-              Operator Login
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }} textAlign="center">
-              Enter password to access operator panel
-            </Typography>
-            <Box component="form" onSubmit={handleLogin}>
-              <TextField
-                label="Password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                error={!!error}
-                helperText={error || "Hint: Use 'operator123' to login"}
-                fullWidth
-                margin="normal"
-              />
-              <Button 
-                type="submit" 
-                variant="contained" 
-                fullWidth 
-                sx={{ mt: 2 }}
-              >
-                Login
-              </Button>
-              <Button
-                variant="text"
-                fullWidth
-                sx={{ mt: 1 }}
-                onClick={() => navigate('/')}
-              >
-                Back to Home
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
+      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography>Loading operator panel...</Typography>
       </Container>
     );
   }
@@ -145,7 +124,7 @@ const OperatorPanel = () => {
             sx={{ mr: 2, '.MuiFormControlLabel-label': { display: 'flex' } }}
           />
           
-          {/* Replace Badge with custom status indicator */}
+          {/* Status indicator */}
           <Box 
             className={`status-indicator-container ${isConnected ? 'online' : 'offline'}`}
             sx={{ 
@@ -160,15 +139,33 @@ const OperatorPanel = () => {
             </Typography>
           </Box>
           
+          {/* User menu */}
           <IconButton 
             color="inherit" 
-            onClick={() => {
-              disableOperatorMode();
-              navigate('/');
-            }}
+            onClick={handleOpenMenu}
+            sx={{ mr: 1 }}
           >
-            <ExitToAppIcon />
+            <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
+              {operatorData?.displayName?.[0] || operatorData?.username?.[0] || 'O'}
+            </Avatar>
           </IconButton>
+          
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleCloseMenu}
+          >
+            <MenuItem disabled>
+              <Typography variant="body2">
+                Signed in as {operatorData?.displayName || operatorData?.username}
+              </Typography>
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogout}>
+              <ExitToAppIcon fontSize="small" sx={{ mr: 1 }} />
+              Logout
+            </MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
       

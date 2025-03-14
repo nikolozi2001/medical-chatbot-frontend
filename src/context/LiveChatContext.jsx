@@ -5,11 +5,10 @@ import {
   setupHeartbeat,
 } from "../services/socketService";
 import { playNotification } from "../utils/soundUtils";
+import { isOperatorLoggedIn, getCurrentOperator } from "../services/authService";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const LiveChatContext = createContext();
-
-// Remove the unused useBatchUpdate function
 
 export const LiveChatProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
@@ -19,6 +18,7 @@ export const LiveChatProvider = ({ children }) => {
   const [currentClient, setCurrentClient] = useState(null);
   const [chats, setChats] = useState({}); // clientId -> messages[]
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [operatorData, setOperatorData] = useState(null);
 
   // Define handleMessageReceived at the component level with useCallback
   const handleMessageReceived = useCallback((message) => {
@@ -52,6 +52,18 @@ export const LiveChatProvider = ({ children }) => {
     }
   }, [clients, operatorMode, soundEnabled]);
 
+  // Check for authenticated operator on mount
+  useEffect(() => {
+    if (isOperatorLoggedIn()) {
+      const operatorInfo = getCurrentOperator();
+      setOperatorData(operatorInfo);
+      // Only enable operator mode if we have valid operator data
+      if (operatorInfo && operatorInfo.id) {
+        setOperatorMode(true);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     // Only create the socket when in operator mode
     if (!operatorMode) return;
@@ -75,8 +87,12 @@ export const LiveChatProvider = ({ children }) => {
     const handleConnect = () => {
       setIsConnected(true);
 
-      // Register as operator
-      socket.emit("operator:connect", { id: `operator_${Date.now()}` });
+      // Register as operator with authenticated data if available
+      const operatorInfo = operatorData || { id: `operator_${Date.now()}` };
+      socket.emit("operator:connect", { 
+        id: operatorInfo.id,
+        name: operatorInfo.displayName || operatorInfo.username || "Operator"
+      });
     };
 
     const handleDisconnect = () => {
@@ -131,7 +147,7 @@ export const LiveChatProvider = ({ children }) => {
       socket.off("client:updated", handleClientUpdated);
       socket.off("message:received", handleMessageReceived);
     };
-  }, [socket, handleMessageReceived, currentClient, operatorMode, soundEnabled]);
+  }, [socket, handleMessageReceived, currentClient, operatorMode, soundEnabled, operatorData]);
 
   const acceptClient = (clientId) => {
     if (!socket || !isConnected) return;
@@ -173,7 +189,9 @@ export const LiveChatProvider = ({ children }) => {
     }));
   };
 
-  const enableOperatorMode = () => setOperatorMode(true);
+  const enableOperatorMode = () => {
+    setOperatorMode(true);
+  };
 
   const disableOperatorMode = () => {
     setOperatorMode(false);
@@ -195,6 +213,8 @@ export const LiveChatProvider = ({ children }) => {
     setCurrentClient,
     soundEnabled,
     setSoundEnabled,
+    operatorData,
+    setOperatorData
   };
 
   return (

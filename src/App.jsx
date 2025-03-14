@@ -20,6 +20,8 @@ import LiveCallerWidget from "./components/LiveCallerWidget";
 import ChatHistory from "./components/ChatHistory";
 import LiveChat from "./components/LiveChat";
 import OperatorPanel from "./pages/OperatorPanel";
+import OperatorSignup from "./pages/OperatorSignup";
+import OperatorLogin from "./pages/OperatorLogin";
 import { LiveChatProvider } from "./context/LiveChatContext";
 import { CHAT_ENDPOINT } from "./config/api";
 import { sendChatMessage, uploadFile } from "./services/chatService";
@@ -399,6 +401,8 @@ const App = () => (
     <BrowserRouter>
       <Routes>
         <Route path="/operator" element={<OperatorPanel />} />
+        <Route path="/operator/signup" element={<OperatorSignup />} />
+        <Route path="/operator/login" element={<OperatorLogin />} />
         <Route path="/" element={<AppContent />} />
       </Routes>
     </BrowserRouter>

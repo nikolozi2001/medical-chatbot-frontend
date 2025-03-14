@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Box, Typography, Button, Divider, Alert } from "@mui/material";
+import { Box, Typography, Button, Divider, Alert, Link } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import ChatIcon from '@mui/icons-material/Chat';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import "./LiveCallerWidget.scss";
@@ -51,6 +52,20 @@ const LiveCallerWidget = ({ onChatButtonClick, onLiveChatClick, isOnline }) => {
             </Typography>
           </Alert>
         )}
+        
+        {/* Add operator links */}
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 2 }}>
+          <Typography variant="caption" color="textSecondary">
+            Operators:
+          </Typography>
+          <Link component={RouterLink} to="/operator/login" underline="hover">
+            <Typography variant="caption">Login</Typography>
+          </Link>
+          <Typography variant="caption" color="textSecondary">•</Typography>
+          <Link component={RouterLink} to="/operator/signup" underline="hover">
+            <Typography variant="caption">Sign Up</Typography>
+          </Link>
+        </Box>
       </Box>
     </Box>
   );

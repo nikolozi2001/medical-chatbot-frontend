@@ -1,5 +1,8 @@
 import { findPredefinedAnswer } from '../data/predefinedAnswers';
 
+// Add API_URL constant definition at the top of the file
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 /**
  * Sends a chat message to the API
  * @param {string} apiUrl - The API URL
@@ -62,4 +65,58 @@ export const uploadFile = async (apiUrl, file, sessionId) => {
   }
   
   return response.json();
+};
+
+// Fetch chat history
+export const getChatSessions = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/chat-sessions`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch chat sessions');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching chat sessions:', error);
+    throw error;
+  }
+};
+
+// Get a specific chat session
+export const getChatSessionById = async (sessionId) => {
+  try {
+    const response = await fetch(`${API_URL}/api/chat-sessions/${sessionId}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch chat session');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching chat session:', error);
+    throw error;
+  }
+};
+
+// Submit feedback for a chat session
+export const submitFeedback = async (sessionId, feedback) => {
+  try {
+    const response = await fetch(`${API_URL}/api/chat-sessions/${sessionId}/feedback`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(feedback)
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to submit feedback');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    throw error;
+  }
 };

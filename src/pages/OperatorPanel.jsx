@@ -191,7 +191,7 @@ const OperatorPanel = () => {
                   >
                     <PersonIcon sx={{ mr: 1, color: client.hasOperator ? 'primary.main' : 'text.secondary' }} />
                     <ListItemText 
-                      primary={`Client ${client.id.substring(0, 8)}...`}
+                      primary={client.name || `Client ${client.id.substring(0, 8)}...`}
                       secondary={client.hasOperator ? 'Assigned' : 'Waiting'}
                     />
                   </ListItemButton>
@@ -206,7 +206,7 @@ const OperatorPanel = () => {
           {currentClient ? (
             <>
               <Typography variant="h6" gutterBottom>
-                Chat with Client {currentClient.id.substring(0, 8)}...
+                Chat with {currentClient.name || `Client ${currentClient.id.substring(0, 8)}...`}
               </Typography>
               
               <Box sx={{ 

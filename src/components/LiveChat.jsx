@@ -28,7 +28,7 @@ const generateUniqueId = (() => {
   return () => `msg_${Date.now()}_${counter++}`;
 })();
 
-const LiveChat = ({ onBack }) => {
+const LiveChat = ({ onBack, clientName }) => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [socket, setSocket] = useState(null);
@@ -36,7 +36,7 @@ const LiveChat = ({ onBack }) => {
   const [isConnecting, setIsConnecting] = useState(true);
   const [connectionError, setConnectionError] = useState(false);
   const [operatorId, setOperatorId] = useState(null);
-  const [clientId] = useState(`client_${Date.now()}`);
+  const [clientId, setClientId] = useState(localStorage.getItem('clientId') || `client_${Date.now()}`);
   const messagesEndRef = useRef(null);
   const retryCountRef = useRef(0);
   const maxRetries = 3;
@@ -102,7 +102,10 @@ const LiveChat = ({ onBack }) => {
         retryCountRef.current = 0;
 
         // Register as client
-        socketInstance.emit("client:connect", { id: clientId });
+        socketInstance.emit("client:connect", { 
+          id: clientId,
+          name: clientName || 'Guest' // Use the provided name or default to 'Guest'
+        });
 
         // Add success message
         setMessages((prev) => [
@@ -437,6 +440,11 @@ const LiveChat = ({ onBack }) => {
 
 LiveChat.propTypes = {
   onBack: PropTypes.func.isRequired,
+  clientName: PropTypes.string
+};
+
+LiveChat.defaultProps = {
+  clientName: ''
 };
 
 export default LiveChat;

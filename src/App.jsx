@@ -44,6 +44,7 @@ const AppContent = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [sessionId, setSessionId] = useState("");
   const [pendingMessages, setPendingMessages] = useState([]);
+  const [clientName, setClientName] = useState("");
 
   const MAX_CHARS = 500; // Maximum character limit
 
@@ -162,7 +163,7 @@ const AppContent = () => {
 
     try {
       // Use the chat service to check for predefined answers first
-      const data = await sendChatMessage(CHAT_ENDPOINT, value, sessionId);
+      const data = await sendChatMessage(CHAT_ENDPOINT, value, sessionId, clientName);
 
       // Add to chat history, marking predefined answers
       setChatHistory((prev) => [
@@ -239,13 +240,15 @@ const AppContent = () => {
     setShowLiveCaller(false);
   };
 
-  const handleStartAiChat = () => {
+  const handleStartAiChat = (name) => {
+    setClientName(name || "");
     setShowChatForm(true);
     setShowLiveCaller(false);
     setShowLiveChat(false);
   };
 
-  const handleStartLiveChat = () => {
+  const handleStartLiveChat = (name) => {
+    setClientName(name || "");
     setShowLiveChat(true);
     setShowLiveCaller(false);
     setShowChatForm(false);
@@ -340,8 +343,8 @@ const AppContent = () => {
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
           {showLiveChat ? (
-            // LiveChat has its own container so it should remain without the extra padding
-            <LiveChat onBack={resetChat} />
+            // Pass clientName to LiveChat
+            <LiveChat onBack={resetChat} clientName={clientName} />
           ) : (
             // For other content, wrap in modal-inner-content for padding
             <div className={`modal-inner-content ${showChatForm && !showChatHistory ? 'chat-active' : ''}`}>

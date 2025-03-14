@@ -1,17 +1,36 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { Box, Typography, Button, Divider, Alert, Link } from "@mui/material";
+import { Box, Typography, Button, Divider, Alert, Link, TextField } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import ChatIcon from '@mui/icons-material/Chat';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import "./LiveCallerWidget.scss";
 
 const LiveCallerWidget = ({ onChatButtonClick, onLiveChatClick, isOnline }) => {
+  const [clientName, setClientName] = useState("");
+  
+  const handleStartAiChat = () => {
+    onChatButtonClick(clientName);
+  };
+  
+  const handleStartLiveChat = () => {
+    onLiveChatClick(clientName);
+  };
+
   return (
     <Box className="live-caller-widget">
       <Typography variant="h5" component="h2" sx={{ mb: 2, fontWeight: 'bold', textAlign: 'left' }}>
         გსურთ დახმარება?
       </Typography>
+      
+      <TextField
+        fullWidth
+        label="თქვენი სახელი (არასავალდებულო)"
+        value={clientName}
+        onChange={(e) => setClientName(e.target.value)}
+        margin="normal"
+        sx={{ mb: 3 }}
+      />
       
       <Typography variant="body1" sx={{ mb: 3, textAlign: 'center' }}>
         აირჩიეთ ქვემოთ მოცემული ვარიანტებიდან ერთ-ერთი
@@ -23,7 +42,7 @@ const LiveCallerWidget = ({ onChatButtonClick, onLiveChatClick, isOnline }) => {
           color="primary"
           size="large"
           startIcon={<ChatIcon />}
-          onClick={onChatButtonClick}
+          onClick={handleStartAiChat}
           fullWidth
         >
           კითხვების დასმა AI-სთან
@@ -38,7 +57,7 @@ const LiveCallerWidget = ({ onChatButtonClick, onLiveChatClick, isOnline }) => {
           color="primary"
           size="large"
           startIcon={<SupportAgentIcon />}
-          onClick={onLiveChatClick}
+          onClick={handleStartLiveChat}
           fullWidth
           disabled={!isOnline}
         >

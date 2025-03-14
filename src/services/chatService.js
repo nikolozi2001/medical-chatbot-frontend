@@ -8,9 +8,10 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
  * @param {string} apiUrl - The API URL
  * @param {string} message - The message to send
  * @param {string} sessionId - The session ID
+ * @param {string} clientName - The client name (default: 'Anonymous')
  * @returns {Promise} - Promise resolving to the response
  */
-export const sendChatMessage = async (apiUrl, message, sessionId) => {
+export const sendChatMessage = async (apiUrl, message, sessionId, clientName = 'Anonymous') => {
   // First check if we have a predefined answer
   const predefinedAnswer = findPredefinedAnswer(message);
   
@@ -25,7 +26,11 @@ export const sendChatMessage = async (apiUrl, message, sessionId) => {
   
   // Continue with normal API call for non-predefined questions
   try {
-    const response = await axios.post(apiUrl, { message, sessionId });
+    const response = await axios.post(apiUrl, { 
+      message, 
+      sessionId, 
+      clientName // Include client name in the request
+    });
     return response.data;
   } catch (error) {
     console.error("Error sending chat message:", error);

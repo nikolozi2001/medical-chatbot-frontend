@@ -1,6 +1,6 @@
 import { findPredefinedAnswer } from '../data/predefinedAnswers';
+import axios from 'axios';
 
-// Add API_URL constant definition at the top of the file
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 /**
@@ -24,23 +24,13 @@ export const sendChatMessage = async (apiUrl, message, sessionId) => {
   }
   
   // Continue with normal API call for non-predefined questions
-  const options = {
-    method: "POST",
-    body: JSON.stringify({
-      message,
-      sessionId
-    }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  
-  const response = await fetch(apiUrl, options);
-  if (!response.ok) {
-    throw new Error("Network response was not ok");
+  try {
+    const response = await axios.post(apiUrl, { message, sessionId });
+    return response.data;
+  } catch (error) {
+    console.error("Error sending chat message:", error);
+    throw error;
   }
-  
-  return response.json();
 };
 
 /**
@@ -68,17 +58,21 @@ export const uploadFile = async (apiUrl, file, sessionId) => {
 };
 
 // Fetch chat history
-export const getChatSessions = async () => {
+export const fetchChatHistory = async () => {
   try {
-    const response = await fetch(`${API_URL}/api/chat-sessions`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch chat sessions');
-    }
-    
-    return await response.json();
+    const response = await axios.get(`${API_URL}/api/chat-sessions`);
+    return response.data.map(session => ({
+      id: session.sessionId,
+      date: session.createdAt || new Date().toISOString(),
+      messages: session.messages.map(msg => ({
+        type: msg.type,
+        message: msg.message,
+        timestamp: msg.timestamp,
+        isPredefined: msg.isPredefined || false
+      }))
+    }));
   } catch (error) {
-    console.error('Error fetching chat sessions:', error);
+    console.error("Error fetching chat history:", error);
     throw error;
   }
 };
@@ -117,6 +111,28 @@ export const submitFeedback = async (sessionId, feedback) => {
     return await response.json();
   } catch (error) {
     console.error('Error submitting feedback:', error);
+    throw error;
+  }
+};
+
+// New function to delete a chat session
+export const deleteChatSession = async (sessionId) => {
+  try {
+    await axios.delete(`${API_URL}/api/chat-sessions/${sessionId}`);
+    return true;
+  } catch (error) {
+    console.error("Error deleting chat session:", error);
+    throw error;
+  }
+};
+
+// New function to clear all chat history
+export const clearChatHistory = async () => {
+  try {
+    await axios.delete(`${API_URL}/api/chat-sessions`);
+    return true;
+  } catch (error) {
+    console.error("Error clearing chat history:", error);
     throw error;
   }
 };

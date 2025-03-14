@@ -24,7 +24,7 @@ import OperatorSignup from "./pages/OperatorSignup";
 import OperatorLogin from "./pages/OperatorLogin";
 import { LiveChatProvider } from "./context/LiveChatContext";
 import { CHAT_ENDPOINT } from "./config/api";
-import { sendChatMessage, uploadFile } from "./services/chatService";
+import { sendChatMessage, uploadFile, fetchChatHistory, deleteChatSession, clearChatHistory } from "./services/chatService";
 import "./App.css";
 
 const AppContent = () => {
@@ -45,12 +45,25 @@ const AppContent = () => {
 
   const MAX_CHARS = 500; // Maximum character limit
 
-  // Load chat history from localStorage on component mount
+  // Fetch chat history from API instead of localStorage on component mount
   useEffect(() => {
-    const savedChats = localStorage.getItem("medicalChatHistory");
-    if (savedChats) {
-      setAllChats(JSON.parse(savedChats));
-    }
+    const fetchAndSetChatHistory = async () => {
+      try {
+        const history = await fetchChatHistory();
+        if (history && history.length > 0) {
+          setAllChats(history);
+        }
+      } catch (error) {
+        console.error("Failed to fetch chat history:", error);
+        // Fall back to localStorage if API fails
+        const savedChats = localStorage.getItem("medicalChatHistory");
+        if (savedChats) {
+          setAllChats(JSON.parse(savedChats));
+        }
+      }
+    };
+
+    fetchAndSetChatHistory();
 
     // Set up online/offline detection
     const handleOnline = () => setIsOnline(true);
@@ -87,6 +100,14 @@ const AppContent = () => {
       }
 
       setAllChats(updatedAllChats);
+      
+      // First try to save to API
+      if (isOnline) {
+        // We'll save individual messages through the sendChatMessage function
+        // This will update MongoDB with each message
+      }
+      
+      // Also save to localStorage as backup
       localStorage.setItem(
         "medicalChatHistory",
         JSON.stringify(updatedAllChats)
@@ -230,27 +251,53 @@ const AppContent = () => {
 
   // Add these new functions to handle chat history deletion
 
-  const handleDeleteSession = (sessionId) => {
-    // Remove session from all chats
-    const updatedChats = allChats.filter((chat) => chat.id !== sessionId);
-    setAllChats(updatedChats);
-    
-    // Update localStorage
-    localStorage.setItem("medicalChatHistory", JSON.stringify(updatedChats));
-    
-    // If the deleted session was the current session, reset the chat
-    if (sessionId === sessionId) {
-      resetChat();
+  const handleDeleteSession = async (sessionId) => {
+    try {
+      if (isOnline) {
+        // Call API to delete from MongoDB
+        await deleteChatSession(sessionId);
+      }
+      
+      // Also remove from local state
+      const updatedChats = allChats.filter((chat) => chat.id !== sessionId);
+      setAllChats(updatedChats);
+      
+      // Update localStorage as backup
+      localStorage.setItem("medicalChatHistory", JSON.stringify(updatedChats));
+      
+      // If the deleted session was the current session, reset the chat
+      if (sessionId === sessionId) {
+        resetChat();
+      }
+    } catch (error) {
+      console.error("Error deleting chat session:", error);
+      // Fallback to local delete if API fails
+      const updatedChats = allChats.filter((chat) => chat.id !== sessionId);
+      setAllChats(updatedChats);
+      localStorage.setItem("medicalChatHistory", JSON.stringify(updatedChats));
     }
   };
 
-  const handleClearAllHistory = () => {
-    // Clear all chat history
-    setAllChats([]);
-    localStorage.removeItem("medicalChatHistory");
-    
-    // Reset current chat if needed
-    resetChat();
+  const handleClearAllHistory = async () => {
+    try {
+      if (isOnline) {
+        // Call API to clear all history from MongoDB
+        await clearChatHistory();
+      }
+      
+      // Clear local state
+      setAllChats([]);
+      localStorage.removeItem("medicalChatHistory");
+      
+      // Reset current chat if needed
+      resetChat();
+    } catch (error) {
+      console.error("Error clearing chat history:", error);
+      // Fallback to local clear if API fails
+      setAllChats([]);
+      localStorage.removeItem("medicalChatHistory");
+      resetChat();
+    }
   };
 
   return (
